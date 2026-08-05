@@ -1,5 +1,3 @@
-const User = require('../models/User');
-
 // @desc    Convert steps to WalkX Coins
 // @route   POST /api/wallet/convert
 // @access  Public (Should be private in production)

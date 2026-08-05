@@ -1,11 +1,9 @@
-const User = require('../models/User');
-
 // @desc    Get Admin Stats (Total Users, Total Steps, Pending Withdrawals)
 // @route   GET /api/admin/stats
 // @access  Private/Admin
 const getAdminStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
+    const totalUsers = 150; // Mock total users
     
     // In a real app, you would aggregate total steps across all users.
     // For now, returning mock data.

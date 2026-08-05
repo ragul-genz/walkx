@@ -1,25 +1,16 @@
-const User = require('../models/User');
-
-// @desc    Register or Login User
-// @route   POST /api/users/auth
-// @access  Public
+// Mock Database logic
 const authUser = async (req, res) => {
   try {
     const { firebaseUid, name, email, phone, photoUrl } = req.body;
 
-    let user = await User.findOne({ firebaseUid });
-
-    if (!user) {
-      // Create new user if not exists
-      user = await User.create({
-        firebaseUid,
-        name,
-        email,
-        phone,
-        photoUrl,
-        referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-      });
-    }
+    let user = {
+      firebaseUid,
+      name,
+      email,
+      phone,
+      photoUrl,
+      referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+    };
 
     res.status(200).json({
       success: true,
@@ -36,10 +27,7 @@ const authUser = async (req, res) => {
 // @access  Private (Needs auth middleware later)
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
+    const user = { id: req.params.id, name: 'Mock User' };
     res.status(200).json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server Error' });
@@ -51,13 +39,7 @@ const getUserProfile = async (req, res) => {
 // @access  Private
 const updateUserProfile = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
+    const user = { id: req.params.id, ...req.body };
     res.status(200).json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server Error' });
@@ -77,7 +59,7 @@ const updateSteps = async (req, res) => {
 
     // In a real app, you would maintain a history of steps per day.
     // For now, we'll just update a 'totalSteps' field or send a success response.
-    const user = await User.findOne({ firebaseUid });
+    const user = { firebaseUid, name: 'Mock User' };
     if (user) {
       // Mock updating steps logic
       console.log(`Steps updated for ${user.name}: ${steps}`);

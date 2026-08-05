@@ -3,7 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const connectDB = require('./src/config/db');
 const userRoutes = require('./src/routes/userRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 
@@ -11,7 +10,6 @@ const adminRoutes = require('./src/routes/adminRoutes');
 const app = express();
 
 // Connect to Database
-connectDB();
 
 // Middleware
 app.use(express.json());

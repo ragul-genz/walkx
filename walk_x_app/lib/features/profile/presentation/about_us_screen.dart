@@ -81,6 +81,12 @@ class AboutUsScreen extends StatelessWidget {
                             style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: 1.2),
                           ),
                           const SizedBox(height: 40),
+                          const Text(
+                            'Made with ❤️ in Tamilnadu',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 16),
                           Text(
                             'POWERED BY GEN Z NEURAL-X',
                             textAlign: TextAlign.center,

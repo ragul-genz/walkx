@@ -104,6 +104,16 @@ class LoginScreen extends StatelessWidget {
                     ),
                     
                     const Spacer(),
+                    const Text(
+                      'Made with ❤️ in Tamilnadu',
+                      style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
                     Text(
                       'POWERED BY GEN Z NEURAL-X',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(

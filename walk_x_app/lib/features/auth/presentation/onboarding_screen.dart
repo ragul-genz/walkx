@@ -147,6 +147,26 @@ class OnboardingScreen extends StatelessWidget {
                         ),
                       ),
                     ).animate().fade(delay: 700.ms).slideY(begin: 0.5, curve: Curves.easeOutBack),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'Made with ❤️ in Tamilnadu',
+                      style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.center,
+                    ).animate().fade(delay: 900.ms),
+                    const SizedBox(height: 12),
+                    Text(
+                      'POWERED BY GEN Z NEURAL-X',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppTheme.textSecondary.withOpacity(0.5),
+                            letterSpacing: 2.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.center,
+                    ).animate().fade(delay: 900.ms),
                     const SizedBox(height: 24),
                   ],
                 ),

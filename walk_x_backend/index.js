@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const userRoutes = require('./src/routes/userRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
+const walletRoutes = require('./src/routes/walletRoutes');
 
 // Initialize App
 const app = express();
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/wallet', walletRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 5000;

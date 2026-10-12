@@ -1,6 +1,6 @@
 {
-  "buildCommand": "bash build.sh",
-  "outputDirectory": "walk_x_app/build/web",
+  "buildCommand": "npm run build",
+  "outputDirectory": "walk_x_website/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

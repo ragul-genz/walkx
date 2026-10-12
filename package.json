@@ -1,7 +1,8 @@
 {
-  "name": "walkx-vercel",
+  "name": "walkx-platform",
   "version": "1.0.0",
   "scripts": {
-    "build": "bash build.sh"
+    "dev": "cd walk_x_website && npm run dev",
+    "build": "cd walk_x_website && npm install && npm run build"
   }
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
@@ -6,16 +5,18 @@ import '../../features/auth/presentation/profile_screen.dart';
 import '../../features/auth/presentation/phone_login_screen.dart';
 import '../../features/auth/presentation/otp_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/dashboard/presentation/activity_screen.dart';
 import '../../features/dashboard/presentation/wallet_screen.dart';
-import '../../features/challenges/presentation/challenges_screen.dart';
+import '../../features/dashboard/presentation/donate_screen.dart';
 import '../../features/profile/presentation/about_us_screen.dart';
 import '../../features/profile/presentation/settings_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/change_password_screen.dart';
+import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../../shared/widgets/main_navigation.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/onboarding',
+  initialLocation: '/dashboard',
   routes: [
     GoRoute(
       path: '/settings/edit-profile',
@@ -34,6 +35,10 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const AboutUsScreen(),
     ),
     GoRoute(
+      path: '/admin',
+      builder: (context, state) => const AdminDashboardScreen(),
+    ),
+    GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
     ),
@@ -50,13 +55,13 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const OtpScreen(),
     ),
     
-    // Main App Navigation Shell
+    // Main App Navigation Shell (5 Branches matching Image 1)
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return MainNavigation(navigationShell: navigationShell);
       },
       branches: [
-        // Branch 0: Dashboard
+        // Branch 0: Home Dashboard
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -65,7 +70,16 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Branch 1: Wallet
+        // Branch 1: Activity
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/activity',
+              builder: (context, state) => const ActivityScreen(),
+            ),
+          ],
+        ),
+        // Branch 2: Rewards & Wallet
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -74,16 +88,16 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Branch 2: Challenges
+        // Branch 3: Donate & Causes
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/challenges',
-              builder: (context, state) => const ChallengesScreen(),
+              path: '/donate',
+              builder: (context, state) => const DonateScreen(),
             ),
           ],
         ),
-        // Branch 3: Profile
+        // Branch 4: Profile & Health
         StatefulShellBranch(
           routes: [
             GoRoute(

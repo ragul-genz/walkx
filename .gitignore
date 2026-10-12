@@ -1,5 +1,7 @@
 # Node.js
 node_modules/
+dist/
+walk_x_react/
 npm-debug.log
 .env
 

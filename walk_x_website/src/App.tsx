@@ -20,6 +20,10 @@ import {
   initialDonationsList
 } from './data/demoData';
 
+// Backend Services & Supabase Integration
+import { supabaseData } from './services/supabaseData';
+import { getCurrentAuthUser, logoutUser, isSupabaseConfigured, supabase } from './services/supabaseAuth';
+
 // Shared Components
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -82,9 +86,11 @@ const getInitialPage = (): PageId => {
   try {
     const hash = window.location.hash.replace('#', '').replace(/^\//, '').trim();
     if (hash === 'admin') return 'admin-dashboard';
+    if (hash === 'reset-password') return 'forgot-password';
     if (hash && validPages.includes(hash as PageId)) return hash as PageId;
     const path = window.location.pathname.replace(/^\//, '').trim();
     if (path === 'admin') return 'admin-dashboard';
+    if (path === 'reset-password') return 'forgot-password';
     if (path && validPages.includes(path as PageId)) return path as PageId;
   } catch {
     // fallback
@@ -155,6 +161,82 @@ export const App: React.FC = () => {
     }
   };
 
+  // Session Recovery & Backend Database Hydration
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const hydrateData = async () => {
+      try {
+        const authInfo = await getCurrentAuthUser();
+        if (isMounted && authInfo.profile) {
+          setUser((prev) => ({
+            ...prev,
+            id: authInfo.profile?.id || prev.id,
+            name: authInfo.profile?.name || prev.name,
+            email: authInfo.profile?.email || prev.email,
+            phone: authInfo.profile?.phone || prev.phone,
+            totalPoints: authInfo.profile?.totalPoints ?? prev.totalPoints,
+            lifetimeSteps: authInfo.profile?.lifetimeSteps ?? prev.lifetimeSteps,
+            streakDays: authInfo.profile?.streakDays ?? prev.streakDays
+          }));
+        }
+
+        const [dbRewards, dbCauses, dbTransactions, dbRedemptions, dbDonations, dbTelemetry] = await Promise.all([
+          supabaseData.getRewards(),
+          supabaseData.getCauses(),
+          supabaseData.getTransactions(),
+          supabaseData.getUserRedemptions(),
+          supabaseData.getDonationRecords(),
+          supabaseData.getActivityTelemetry()
+        ]);
+
+        if (isMounted) {
+          if (dbRewards.length > 0) setRewards(dbRewards);
+          if (dbCauses.length > 0) setCauses(dbCauses);
+          if (dbTransactions.length > 0) setTransactions(dbTransactions);
+          if (dbRedemptions.length > 0) setRedemptions(dbRedemptions);
+          if (dbDonations.length > 0) setDonations(dbDonations);
+          if (dbTelemetry.length > 0) setWeeklyData(dbTelemetry);
+        }
+      } catch (err) {
+        console.warn('Hydration fallback:', err);
+      }
+    };
+
+    hydrateData();
+
+    if (isSupabaseConfigured && supabase) {
+      const { data: authListener } = supabase.auth.onAuthStateChange(async (event) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+          const authInfo = await getCurrentAuthUser();
+          if (isMounted && authInfo.profile) {
+            setUser((prev) => ({
+              ...prev,
+              id: authInfo.profile?.id || prev.id,
+              name: authInfo.profile?.name || prev.name,
+              email: authInfo.profile?.email || prev.email,
+              phone: authInfo.profile?.phone || prev.phone,
+              totalPoints: authInfo.profile?.totalPoints ?? prev.totalPoints,
+              lifetimeSteps: authInfo.profile?.lifetimeSteps ?? prev.lifetimeSteps,
+              streakDays: authInfo.profile?.streakDays ?? prev.streakDays
+            }));
+          }
+        } else if (event === 'SIGNED_OUT') {
+          if (isMounted) setUser(initialUserProfile);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+        authListener.subscription.unsubscribe();
+      };
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Modals State
   const [isStepModalOpen, setIsStepModalOpen] = useState(false);
   const [stepModalValue, setStepModalValue] = useState(1000);
@@ -170,15 +252,19 @@ export const App: React.FC = () => {
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
   const [activeRedeemItem, setActiveRedeemItem] = useState<RewardItem | null>(null);
 
-  // Handlers: Step Simulation
-  const handleAddSteps = (stepsToAdd: number) => {
+  // Handlers: Step Simulation & Database Telemetry Sync
+  const handleAddSteps = async (stepsToAdd: number) => {
+    const result = await supabaseData.syncSteps(stepsToAdd);
+
     const updatedToday = user.stepsToday + stepsToAdd;
-    const updatedPoints = user.totalPoints + stepsToAdd;
+    const updatedPoints = result.newBalance !== undefined ? result.newBalance : user.totalPoints + stepsToAdd;
+    const updatedLifetime = result.newTotalSteps !== undefined ? result.newTotalSteps : (user.lifetimeSteps || 0) + stepsToAdd;
 
     setUser((prev) => ({
       ...prev,
       stepsToday: updatedToday,
       totalPoints: updatedPoints,
+      lifetimeSteps: updatedLifetime
     }));
 
     setWeeklyData((prev) => {
@@ -196,7 +282,7 @@ export const App: React.FC = () => {
       id: `tx_${Date.now()}`,
       title: 'Stride Telemetry Sync',
       detail: `Added +${stepsToAdd.toLocaleString()} verified steps`,
-      points: stepsToAdd,
+      points: result.pointsEarned || stepsToAdd,
       type: 'credit',
       date: 'Just now',
       category: 'steps',
@@ -207,7 +293,7 @@ export const App: React.FC = () => {
     if (stepsToAdd >= 1000) {
       triggerCelebration();
     }
-    showToast(`Logged +${stepsToAdd.toLocaleString()} steps (+${stepsToAdd.toLocaleString()} WalkX Points added)!`);
+    showToast(`Logged +${stepsToAdd.toLocaleString()} steps (+${(result.pointsEarned || stepsToAdd).toLocaleString()} WalkX Points added)!`);
     setIsStepModalOpen(false);
   };
 
@@ -232,7 +318,7 @@ export const App: React.FC = () => {
   };
 
   // Handlers: UPI Withdrawal
-  const handleConfirmWithdrawal = (e: React.FormEvent) => {
+  const handleConfirmWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault();
     const pointsRequired = Math.round((withdrawInr / 11) * 1000);
 
@@ -241,9 +327,17 @@ export const App: React.FC = () => {
       return;
     }
 
+    const res = await supabaseData.withdrawUpi(withdrawUpiId, withdrawInr);
+    if (!res.success && res.error) {
+      showToast(`Withdrawal error: ${res.error}`);
+      return;
+    }
+
+    const updatedPoints = res.newBalance !== undefined ? res.newBalance : user.totalPoints - pointsRequired;
+
     setUser((prev) => ({
       ...prev,
-      totalPoints: prev.totalPoints - pointsRequired,
+      totalPoints: updatedPoints,
       redeemedPoints: prev.redeemedPoints + pointsRequired,
     }));
 
@@ -271,15 +365,23 @@ export const App: React.FC = () => {
     setIsDonateModalOpen(true);
   };
 
-  const handleConfirmPointsDonation = (cause: CauseItem, pointsAmt: number, inrValue: number) => {
+  const handleConfirmPointsDonation = async (cause: CauseItem, pointsAmt: number, inrValue: number) => {
     if (user.totalPoints < pointsAmt) {
       showToast(`Insufficient balance: You have ${user.totalPoints.toLocaleString()} points.`);
       return;
     }
 
+    const res = await supabaseData.pledgeDonation(cause.id, pointsAmt);
+    if (!res.success && res.error) {
+      showToast(`Donation error: ${res.error}`);
+      return;
+    }
+
+    const updatedPoints = res.newBalance !== undefined ? res.newBalance : user.totalPoints - pointsAmt;
+
     setUser((prev) => ({
       ...prev,
-      totalPoints: prev.totalPoints - pointsAmt,
+      totalPoints: updatedPoints,
       donatedPoints: prev.donatedPoints + pointsAmt,
     }));
 
@@ -298,9 +400,9 @@ export const App: React.FC = () => {
     );
 
     // New Donation Record (Transparent Sample Record)
-    const refNum = `WX-PTS-${Math.floor(1000 + Math.random() * 9000)}`;
+    const refNum = res.referenceNumber || `WX-PTS-${Math.floor(1000 + Math.random() * 9000)}`;
     const newDonation: DonationRecord = {
-      id: `dn_${Date.now()}`,
+      id: res.donationId || `dn_${Date.now()}`,
       referenceNumber: refNum,
       donorName: user.name,
       donorEmail: user.email,
@@ -310,10 +412,10 @@ export const App: React.FC = () => {
       pointsEquivalent: pointsAmt,
       contributionType: 'Points Contribution',
       date: 'Just now',
-      status: 'Points Pledged (Demo)',
+      status: isSupabaseConfigured ? 'Points Pledged' : 'Points Pledged (Demo)',
       paymentMethod: 'WalkX Points',
-      isDemoRecord: true,
-      notes: 'Simulated points deduction from active walker pool. No real bank transfer.'
+      isDemoRecord: !isSupabaseConfigured,
+      notes: `Points pledged to ${cause.title}`
     };
     setDonations((prev) => [newDonation, ...prev]);
 
@@ -382,7 +484,7 @@ export const App: React.FC = () => {
     setIsRedeemModalOpen(true);
   };
 
-  const handleConfirmRedeem = (rewardToRedeem?: RewardItem, customDeliveryTarget?: string) => {
+  const handleConfirmRedeem = async (rewardToRedeem?: RewardItem, customDeliveryTarget?: string) => {
     const item = rewardToRedeem || activeRedeemItem;
     if (!item) return;
     if (user.totalPoints < item.pointsCost) {
@@ -391,17 +493,37 @@ export const App: React.FC = () => {
     }
 
     const target = customDeliveryTarget || (item.category === 'cash' ? user.phone || '9876543210@upi' : user.email);
-    const isInstantCash = item.category === 'cash';
 
+    const res = await supabaseData.redeemReward(item.id, target);
+    if (!res.success && res.error) {
+      showToast(`Redemption error: ${res.error}`);
+      return;
+    }
+
+    const updatedPoints = res.newBalance !== undefined ? res.newBalance : user.totalPoints - item.pointsCost;
+
+    setUser((prev) => ({
+      ...prev,
+      totalPoints: updatedPoints,
+      redeemedPoints: prev.redeemedPoints + item.pointsCost,
+    }));
+
+    setRewards((prev) =>
+      prev.map((r) =>
+        r.id === item.id ? { ...r, stockCount: Math.max(0, r.stockCount - 1) } : r
+      )
+    );
+
+    const isInstantCash = item.category === 'cash';
     const newRedemption: RedemptionRecord = {
-      id: `rdm_${Date.now()}`,
+      id: res.redemptionId || `rdm_${Date.now()}`,
       rewardId: item.id,
       rewardTitle: item.title,
       category: item.category,
       pointsSpent: item.pointsCost,
       inrValue: item.inrValue,
       date: 'Just now',
-      status: isInstantCash ? 'Approved' : 'Completed',
+      status: isInstantCash ? 'Approved' : 'Pending',
       redemptionCode: isInstantCash
         ? undefined
         : `WLKX-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
@@ -412,18 +534,6 @@ export const App: React.FC = () => {
     };
 
     setRedemptions((prev) => [newRedemption, ...prev]);
-
-    setUser((prev) => ({
-      ...prev,
-      totalPoints: prev.totalPoints - item.pointsCost,
-      redeemedPoints: prev.redeemedPoints + item.pointsCost,
-    }));
-
-    setRewards((prev) =>
-      prev.map((r) =>
-        r.id === item.id ? { ...r, stockCount: Math.max(0, r.stockCount - 1) } : r
-      )
-    );
 
     const newTx: Transaction = {
       id: `tx_${Date.now()}`,
@@ -485,8 +595,22 @@ export const App: React.FC = () => {
               return (
                 <LoginPage
                   onNavigate={setCurrentPage}
-                  onLoginSuccess={(name, email) => {
-                    setUser((prev) => ({ ...prev, name, email }));
+                  onLoginSuccess={async (name, email) => {
+                    const authInfo = await getCurrentAuthUser();
+                    if (authInfo.profile) {
+                      setUser((prev) => ({
+                        ...prev,
+                        id: authInfo.profile?.id || prev.id,
+                        name: authInfo.profile?.name || name,
+                        email: authInfo.profile?.email || email,
+                        phone: authInfo.profile?.phone || prev.phone,
+                        totalPoints: authInfo.profile?.totalPoints ?? prev.totalPoints,
+                        lifetimeSteps: authInfo.profile?.lifetimeSteps ?? prev.lifetimeSteps,
+                        streakDays: authInfo.profile?.streakDays ?? prev.streakDays
+                      }));
+                    } else {
+                      setUser((prev) => ({ ...prev, name, email }));
+                    }
                     showToast(`Welcome back, ${name}!`);
                     setCurrentPage('dashboard');
                   }}
@@ -497,8 +621,22 @@ export const App: React.FC = () => {
               return (
                 <RegisterPage
                   onNavigate={setCurrentPage}
-                  onRegisterSuccess={(name, email) => {
-                    setUser((prev) => ({ ...prev, name, email }));
+                  onRegisterSuccess={async (name, email) => {
+                    const authInfo = await getCurrentAuthUser();
+                    if (authInfo.profile) {
+                      setUser((prev) => ({
+                        ...prev,
+                        id: authInfo.profile?.id || prev.id,
+                        name: authInfo.profile?.name || name,
+                        email: authInfo.profile?.email || email,
+                        phone: authInfo.profile?.phone || prev.phone,
+                        totalPoints: authInfo.profile?.totalPoints ?? 1000,
+                        lifetimeSteps: authInfo.profile?.lifetimeSteps ?? 0,
+                        streakDays: authInfo.profile?.streakDays ?? 1
+                      }));
+                    } else {
+                      setUser((prev) => ({ ...prev, name, email, totalPoints: 1000 }));
+                    }
                     showToast(`Welcome to WalkX, ${name}!`);
                     setCurrentPage('dashboard');
                   }}
@@ -577,8 +715,17 @@ export const App: React.FC = () => {
               return (
                 <ProfileSettingsPage
                   user={user}
-                  onUpdateUser={(updated) => setUser((prev) => ({ ...prev, ...updated }))}
-                  onLogout={() => setCurrentPage('landing')}
+                  onUpdateUser={async (updated) => {
+                    setUser((prev) => ({ ...prev, ...updated }));
+                    await supabaseData.updateProfile(updated);
+                    showToast('Profile preferences updated.');
+                  }}
+                  onLogout={async () => {
+                    await logoutUser();
+                    setUser(initialUserProfile);
+                    showToast('Signed out successfully.');
+                    setCurrentPage('landing');
+                  }}
                 />
               );
 

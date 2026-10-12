@@ -33,6 +33,12 @@ export interface UserProfile {
   totalPoints: number;
   redeemedPoints: number;
   donatedPoints: number;
+  lifetimeSteps?: number;
+  caloriesBurned?: number;
+  distanceCoveredKm?: number;
+  co2SavedKg?: number;
+  badgesEarned?: number;
+  role?: string;
 }
 
 export interface StrideData {
@@ -50,8 +56,8 @@ export interface Transaction {
   points: number;
   type: 'credit' | 'debit';
   date: string;
-  category: 'steps' | 'reward' | 'donation' | 'bonus';
-  status: 'completed' | 'processing' | 'failed';
+  category: 'steps' | 'reward' | 'donation' | 'bonus' | 'withdrawal' | 'redemption';
+  status: 'completed' | 'processing' | 'failed' | 'pending' | 'cancelled';
 }
 
 export interface RewardItem {
@@ -61,7 +67,7 @@ export interface RewardItem {
   inrValue: number;
   icon: string;
   description: string;
-  category: 'cash' | 'voucher' | 'merch';
+  category: 'cash' | 'voucher' | 'merch' | 'shopping' | 'electronics' | 'fitness' | 'travel' | 'giftcard';
   stockCount: number;
   unlocked: boolean;
   eligibility?: string;
@@ -73,14 +79,16 @@ export interface RedemptionRecord {
   id: string;
   rewardId: string;
   rewardTitle: string;
-  category: 'cash' | 'voucher' | 'merch';
+  category: 'cash' | 'voucher' | 'merch' | 'shopping' | 'electronics' | 'fitness' | 'travel' | 'giftcard';
   pointsSpent: number;
   inrValue: number;
   date: string;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed' | 'Fulfilled';
   redemptionCode?: string;
+  voucherCode?: string;
   deliveryTarget: string;
   statusNote?: string;
+  notes?: string;
 }
 
 export interface PointsConfig {
@@ -121,9 +129,9 @@ export interface DonationRecord {
   causeCategory?: CauseCategory;
   amountInr: number;
   pointsEquivalent: number;
-  contributionType: 'Points Contribution' | 'Monetary Pledge';
+  contributionType: 'Points Contribution' | 'Monetary Pledge' | 'Corporate Match';
   date: string;
-  status: 'Verified' | 'Pending Review' | 'Flagged' | 'Points Pledged (Demo)' | 'Monetary Pledge (Prepared Integration)';
+  status: 'Verified' | 'Pending Review' | 'Flagged' | 'Points Pledged' | 'Points Pledged (Demo)' | 'Monetary Pledge (Prepared Integration)' | 'Completed' | 'Failed';
   paymentMethod: string;
   isDemoRecord: boolean;
   notes?: string;
@@ -138,6 +146,9 @@ export interface AdminUser {
   pointsBalance: number;
   joinedDate: string;
   status: 'Active' | 'Suspended' | 'Pending';
+  avatar?: string;
+  kycStatus?: string;
+  phone?: string;
 }
 
 export interface AdminReportMetric {

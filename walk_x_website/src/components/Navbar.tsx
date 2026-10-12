@@ -9,9 +9,11 @@ import {
   Gift,
   Wallet,
   Activity,
-  User,
-  ArrowRight
+  ArrowRight,
+  Database,
+  User
 } from 'lucide-react';
+import { isSupabaseConfigured } from '../services/supabaseClient';
 
 interface NavbarProps {
   currentPage: PageId;
@@ -99,6 +101,22 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Action Cluster: Portal Toggle & Profile */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Backend Connectivity Status Pill */}
+            <div
+              title={
+                isSupabaseConfigured
+                  ? 'Connected to live Supabase Auth and PostgreSQL Database'
+                  : 'Running in Interactive Demo Sandbox. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to connect.'
+              }
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-slate-900/60 border-slate-800"
+            >
+              <Database size={11} className={isSupabaseConfigured ? 'text-emerald-400' : 'text-amber-400'} />
+              <span className={`w-1.5 h-1.5 rounded-full ${isSupabaseConfigured ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+              <span className={isSupabaseConfigured ? 'text-emerald-300' : 'text-amber-300'}>
+                {isSupabaseConfigured ? 'Supabase Live' : 'Demo Sandbox'}
+              </span>
+            </div>
+
             {/* User vs Admin Role Toggle Button */}
             <button
               onClick={() => {

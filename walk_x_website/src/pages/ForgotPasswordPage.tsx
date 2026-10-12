@@ -12,7 +12,7 @@ import {
   EyeOff,
   KeyRound
 } from 'lucide-react';
-import { requestPasswordReset, isSupabaseConfigured } from '../services/supabaseAuth';
+import { requestPasswordReset, updatePassword, isSupabaseConfigured } from '../services/supabaseAuth';
 
 interface ForgotPasswordPageProps {
   onNavigate: (page: PageId) => void;
@@ -61,7 +61,7 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onNaviga
     }
   };
 
-  const handleUpdatePassword = (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPassword || newPassword.length < 8) {
       setError('New password must be at least 8 characters long.');
@@ -72,8 +72,20 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onNaviga
       return;
     }
 
+    setIsLoading(true);
     setError(null);
-    setResetComplete(true);
+    try {
+      const res = await updatePassword(newPassword);
+      setIsLoading(false);
+      if (!res.success) {
+        setError(res.error || 'Unable to update password.');
+        return;
+      }
+      setResetComplete(true);
+    } catch (err: any) {
+      setIsLoading(false);
+      setError(err.message || 'Failed to update password.');
+    }
   };
 
   return (

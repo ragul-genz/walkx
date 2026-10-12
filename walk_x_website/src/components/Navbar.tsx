@@ -11,7 +11,8 @@ import {
   Activity,
   ArrowRight,
   Database,
-  User
+  User,
+  Users
 } from 'lucide-react';
 import { isSupabaseConfigured } from '../services/supabaseClient';
 
@@ -40,6 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks: { label: string; page: PageId; icon?: any }[] = [
     { label: 'Overview', page: 'landing' },
     { label: 'Dashboard', page: 'dashboard', icon: Smartphone },
+    { label: 'Feed', page: 'feed', icon: Users },
     { label: 'Activity', page: 'activity', icon: Activity },
     { label: 'Points Wallet', page: 'wallet', icon: Wallet },
     { label: 'Rewards Store', page: 'rewards', icon: Gift },

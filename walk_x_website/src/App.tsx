@@ -42,6 +42,8 @@ import { RewardsPage } from './pages/RewardsPage';
 import { DonationPage } from './pages/DonationPage';
 import { DonationHistoryPage } from './pages/DonationHistoryPage';
 import { ProfileSettingsPage } from './pages/ProfileSettingsPage';
+import { SocialFeedPage } from './pages/SocialFeedPage';
+import { UserProfilePage } from './pages/UserProfilePage';
 
 // Admin Pages
 import { AdminLoginPage } from './pages/AdminLoginPage';
@@ -67,6 +69,8 @@ const validPages: PageId[] = [
   'forgot-password',
   'dashboard',
   'activity',
+  'feed',
+  'user-profile',
   'wallet',
   'rewards',
   'donation',
@@ -137,6 +141,14 @@ export const App: React.FC = () => {
   const [redemptions, setRedemptions] = useState<RedemptionRecord[]>(initialRedemptions);
   const [causes, setCauses] = useState<CauseItem[]>(initialCauses);
   const [donations, setDonations] = useState<DonationRecord[]>(initialDonationsList);
+
+  // Social Feed & Walker Profile Navigation State
+  const [viewingProfileId, setViewingProfileId] = useState<string>('usr_arjun');
+
+  const handleViewUserProfile = (targetUserId: string) => {
+    setViewingProfileId(targetUserId);
+    setCurrentPage('user-profile');
+  };
 
   // Global Toast Alert State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -668,6 +680,26 @@ export const App: React.FC = () => {
                   user={user}
                   weeklyData={weeklyData}
                   onAddSteps={handleAddSteps}
+                />
+              );
+
+            case 'feed':
+              return (
+                <SocialFeedPage
+                  user={user}
+                  onViewProfile={handleViewUserProfile}
+                  showToast={showToast}
+                />
+              );
+
+            case 'user-profile':
+              return (
+                <UserProfilePage
+                  userId={viewingProfileId}
+                  currentUser={user}
+                  onBack={() => setCurrentPage('feed')}
+                  onViewProfile={handleViewUserProfile}
+                  showToast={showToast}
                 />
               );
 

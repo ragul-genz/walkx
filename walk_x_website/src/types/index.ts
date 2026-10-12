@@ -5,6 +5,8 @@ export type PageId =
   | 'forgot-password'
   | 'dashboard'
   | 'activity'
+  | 'feed'
+  | 'user-profile'
   | 'wallet'
   | 'rewards'
   | 'donation'
@@ -39,6 +41,13 @@ export interface UserProfile {
   co2SavedKg?: number;
   badgesEarned?: number;
   role?: string;
+  username?: string;
+  bio?: string;
+  isPrivate?: boolean;
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
+  city?: string;
 }
 
 export interface StrideData {
@@ -168,4 +177,87 @@ export type AdminSection =
   | 'reports'
   | 'settings'
   | 'audit';
+
+// ==========================================
+// SOCIAL ACTIVITY FEED TYPES
+// ==========================================
+
+export type ActivityType =
+  | 'Walking'
+  | 'Morning Stride'
+  | 'Sunset Walk'
+  | 'Power Walk'
+  | 'Hiking'
+  | 'Jogging'
+  | 'Nature Trail'
+  | 'Charity Walk';
+
+export type PostVisibility = 'public' | 'followers_only' | 'private';
+
+export type ReportReason =
+  | 'Spam or Bot Activity'
+  | 'False Step / Activity Telemetry'
+  | 'Inappropriate Media'
+  | 'Harassment or Hate Speech'
+  | 'Other Policy Violation';
+
+export interface SocialComment {
+  id: string;
+  postId: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface SocialPost {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  userBadge?: string;
+  isPrivateAccount?: boolean;
+  caption: string;
+  photos: string[];
+  activityType: ActivityType;
+  metrics?: {
+    steps?: number;
+    distanceKm?: number;
+    durationMinutes?: number;
+    pointsEarned?: number;
+  };
+  placeTag?: {
+    name: string;
+    city?: string;
+  };
+  visibility: PostVisibility;
+  likesCount: number;
+  isLiked: boolean;
+  commentsCount: number;
+  comments: SocialComment[];
+  isSaved: boolean;
+  isReported?: boolean;
+  createdAt: string;
+}
+
+export interface SocialUserProfile {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  bio: string;
+  isPrivate: boolean;
+  city: string;
+  followersCount: number;
+  followingCount: number;
+  postsCount: number;
+  lifetimeSteps: number;
+  totalPoints: number;
+  isFollowing: boolean;
+  followStatus: 'none' | 'following' | 'requested';
+  badgeTitle: string;
+  joinDate: string;
+}
+
 

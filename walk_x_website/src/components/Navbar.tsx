@@ -7,7 +7,6 @@ import {
   Shield,
   Heart,
   Gift,
-  Wallet,
   Activity,
   ArrowRight,
   Database,

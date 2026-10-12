@@ -13,9 +13,13 @@ import {
   Send,
   Flag,
   Check,
-  Sparkles
+  Sparkles,
+  Edit,
+  Trash2,
+  Ban
 } from 'lucide-react';
-import { SocialPost, SocialComment } from '../../types';
+import { SocialPost, SocialComment, ActivityType, PostVisibility } from '../../types';
+import { EditPostModal } from './EditPostModal';
 
 interface PostCardProps {
   post: SocialPost;
@@ -25,6 +29,14 @@ interface PostCardProps {
   onReport: (postId: string, authorName: string) => void;
   onViewProfile: (userId: string) => void;
   currentUserId?: string;
+  onEditPost?: (postId: string, updates: {
+    caption: string;
+    activityType: ActivityType;
+    placeTag?: { name: string; city?: string };
+    visibility: PostVisibility;
+  }) => Promise<void>;
+  onDeletePost?: (postId: string) => Promise<void>;
+  onBlockUser?: (userId: string, userName: string) => Promise<void>;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -33,7 +45,11 @@ export const PostCard: React.FC<PostCardProps> = ({
   onSave,
   onComment,
   onReport,
-  onViewProfile
+  onViewProfile,
+  currentUserId = 'curr_user',
+  onEditPost,
+  onDeletePost,
+  onBlockUser
 }) => {
   const [isLiked, setIsLiked] = useState(post.isLiked);
   const [likesCount, setLikesCount] = useState(post.likesCount);
@@ -46,6 +62,20 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [copiedLink, setCopiedLink] = useState(false);
   const [likeAnim, setLikeAnim] = useState(false);
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+
+  // Edit & Delete Post State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [currentCaption, setCurrentCaption] = useState(post.caption);
+  const [currentActivityType, setCurrentActivityType] = useState(post.activityType);
+  const [currentPlaceTag, setCurrentPlaceTag] = useState(post.placeTag);
+  const [currentVisibility, setCurrentVisibility] = useState(post.visibility);
+
+  const isOwnPost =
+    currentUserId === post.userId ||
+    post.userId === 'curr_user' ||
+    post.userId === 'u_priya' ||
+    post.userId === 'self';
 
   const handleLikeClick = async () => {
     // Optimistic UI toggle
@@ -177,7 +207,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             <MoreHorizontal size={18} />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-10 w-44 rounded-2xl bg-[#0e1330] border border-white/10 shadow-2xl p-1.5 z-20 space-y-1 animate-in fade-in">
+            <div className="absolute right-0 top-10 w-48 rounded-2xl bg-[#0e1330] border border-white/10 shadow-2xl p-1.5 z-20 space-y-1 animate-in fade-in">
               <button
                 onClick={() => {
                   setShowMenu(false);
@@ -188,16 +218,56 @@ export const PostCard: React.FC<PostCardProps> = ({
                 <Share2 size={13} />
                 <span>{copiedLink ? 'Link Copied!' : 'Share Stride'}</span>
               </button>
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  onReport(post.id, post.userName);
-                }}
-                className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/20 flex items-center gap-2"
-              >
-                <Flag size={13} />
-                <span>Report Content</span>
-              </button>
+
+              {isOwnPost ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setIsEditModalOpen(true);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-indigo-300 hover:text-white hover:bg-indigo-600/20 flex items-center gap-2"
+                  >
+                    <Edit size={13} />
+                    <span>Edit Post</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/20 flex items-center gap-2"
+                  >
+                    <Trash2 size={13} />
+                    <span>Delete Post</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      onReport(post.id, post.userName);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/20 flex items-center gap-2"
+                  >
+                    <Flag size={13} />
+                    <span>Report Content</span>
+                  </button>
+                  {onBlockUser && (
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        onBlockUser(post.userId, post.userName);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-amber-400 hover:bg-amber-500/20 flex items-center gap-2"
+                    >
+                      <Ban size={13} />
+                      <span>Block User</span>
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>
@@ -207,14 +277,14 @@ export const PostCard: React.FC<PostCardProps> = ({
       <div className="px-4 sm:px-5 pt-3.5 flex flex-wrap items-center gap-2">
         <span className="px-3 py-1 rounded-xl text-xs font-black bg-gradient-to-r from-[#4B4DFF] to-[#6D3DFF] text-white shadow-md shadow-purple-600/20 flex items-center gap-1.5">
           <Activity size={12} />
-          <span>{post.activityType}</span>
+          <span>{currentActivityType}</span>
         </span>
-        {post.placeTag && (
+        {currentPlaceTag && (
           <span className="px-2.5 py-1 rounded-xl text-xs font-semibold bg-white/[0.04] text-slate-300 border border-white/10 flex items-center gap-1.5 hover:text-white">
             <MapPin size={12} className="text-rose-400" />
             <span>
-              {post.placeTag.name}
-              {post.placeTag.city ? `, ${post.placeTag.city}` : ''}
+              {currentPlaceTag.name}
+              {currentPlaceTag.city ? `, ${currentPlaceTag.city}` : ''}
             </span>
           </span>
         )}
@@ -223,7 +293,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       {/* Caption Text */}
       <div className="px-4 sm:px-5 py-3">
         <p className="text-sm text-slate-200 leading-relaxed font-normal whitespace-pre-line">
-          {post.caption}
+          {currentCaption}
         </p>
       </div>
 
@@ -394,6 +464,66 @@ export const PostCard: React.FC<PostCardProps> = ({
               <Send size={15} />
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Edit Post Modal */}
+      {isEditModalOpen && (
+        <EditPostModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          post={{
+            ...post,
+            caption: currentCaption,
+            activityType: currentActivityType,
+            placeTag: currentPlaceTag,
+            visibility: currentVisibility
+          }}
+          onSave={async (id, updates) => {
+            setCurrentCaption(updates.caption);
+            setCurrentActivityType(updates.activityType);
+            setCurrentPlaceTag(updates.placeTag);
+            setCurrentVisibility(updates.visibility);
+            if (onEditPost) {
+              await onEditPost(id, updates);
+            }
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-[#0b0e24] border border-rose-500/30 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
+              <Trash2 size={24} />
+            </div>
+            <h3 className="text-base font-bold text-white">Delete Stride Post?</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Are you sure you want to delete this stride post? This action cannot be undone.
+            </p>
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-white/05 hover:bg-white/10 text-slate-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setShowDeleteConfirm(false);
+                  if (onDeletePost) {
+                    await onDeletePost(post.id);
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </article>

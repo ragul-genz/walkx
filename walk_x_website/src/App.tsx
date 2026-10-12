@@ -705,6 +705,7 @@ export const App: React.FC = () => {
                   currentUser={user}
                   onBack={() => setCurrentPage('feed')}
                   onViewProfile={handleViewUserProfile}
+                  onNavigate={setCurrentPage}
                   showToast={showToast}
                 />
               );

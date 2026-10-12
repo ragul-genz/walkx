@@ -242,6 +242,7 @@ class SocialService {
   private posts: SocialPost[] = [...initialSocialPosts];
   private profiles: SocialUserProfile[] = [...initialSocialProfiles];
   private reportedPostIds: Set<string> = new Set();
+  private blockedUserIds: Set<string> = new Set();
   private userAccountPrivacy: boolean = false; // Current logged-in user privacy
 
   constructor() {
@@ -262,6 +263,10 @@ class SocialService {
       if (pvt !== null) {
         this.userAccountPrivacy = JSON.parse(pvt);
       }
+      const savedBlocked = localStorage.getItem('walkx_blocked_users');
+      if (savedBlocked) {
+        this.blockedUserIds = new Set(JSON.parse(savedBlocked));
+      }
     } catch {
       // Fallback
     }
@@ -272,6 +277,7 @@ class SocialService {
       localStorage.setItem('walkx_social_posts', JSON.stringify(this.posts));
       localStorage.setItem('walkx_social_profiles', JSON.stringify(this.profiles));
       localStorage.setItem('walkx_user_privacy', JSON.stringify(this.userAccountPrivacy));
+      localStorage.setItem('walkx_blocked_users', JSON.stringify(Array.from(this.blockedUserIds)));
     } catch {
       // Ignore
     }
@@ -339,19 +345,53 @@ class SocialService {
       }
     }
 
-    // Filter local reactive post feed
-    let result = [...this.posts].filter((p) => !this.reportedPostIds.has(p.id));
+    // Set of users followed by the current logged-in user
+    const followingUserIds = new Set(
+      this.profiles.filter((pr) => pr.isFollowing).map((pr) => pr.id)
+    );
+
+    // 1. Filter out reported posts and blocked users
+    let result = [...this.posts].filter(
+      (p) => !this.reportedPostIds.has(p.id) && !this.blockedUserIds.has(p.userId)
+    );
+
+    // 2. Protect private posts and private accounts from unauthorized viewers
+    result = result.filter((p) => {
+      const isAuthor =
+        p.userId === currentUserId ||
+        p.userId === 'curr_user' ||
+        p.userId === 'u_priya' ||
+        p.userId === 'self';
+
+      // Author can always see their own posts
+      if (isAuthor) return true;
+
+      // Private posts: visible ONLY to author
+      if (p.visibility === 'private') return false;
+
+      // Followers-only posts: visible ONLY to confirmed followers
+      const isFollower = followingUserIds.has(p.userId);
+      if (p.visibility === 'followers_only' && !isFollower) return false;
+
+      // Private account: posts visible ONLY to confirmed followers
+      if (p.isPrivateAccount && !isFollower) return false;
+
+      return true;
+    });
 
     // Tab Filters
     if (tab === 'following') {
-      const followingUserIds = new Set(
-        this.profiles.filter((pr) => pr.isFollowing).map((pr) => pr.id)
-      );
       result = result.filter((p) => followingUserIds.has(p.userId) || p.userId === currentUserId);
     } else if (tab === 'saved') {
       result = result.filter((p) => p.isSaved);
     } else if (tab === 'my_posts') {
-      result = result.filter((p) => p.userId === currentUserId || p.userId === 'curr_user' || p.userId === 'u_priya');
+      result = result.filter(
+        (p) =>
+          p.userId === currentUserId ||
+          p.userId === 'curr_user' ||
+          p.userId === 'u_priya' ||
+          p.userId === 'self'
+      );
     }
 
     // Activity Filter
@@ -610,10 +650,120 @@ class SocialService {
   }
 
   /**
-   * Get Posts by User ID
+   * Edit / Update Post (Author only)
    */
-  async getUserPosts(userId: string): Promise<SocialPost[]> {
-    return this.posts.filter((p) => p.userId === userId && !this.reportedPostIds.has(p.id));
+  async updatePost(
+    postId: string,
+    updates: {
+      caption?: string;
+      activityType?: ActivityType;
+      placeTag?: { name: string; city?: string };
+      visibility?: PostVisibility;
+    }
+  ): Promise<SocialPost> {
+    const post = this.posts.find((p) => p.id === postId);
+    if (!post) throw new Error('Post not found');
+
+    if (updates.caption !== undefined) post.caption = updates.caption;
+    if (updates.activityType !== undefined) post.activityType = updates.activityType;
+    if (updates.placeTag !== undefined) post.placeTag = updates.placeTag;
+    if (updates.visibility !== undefined) post.visibility = updates.visibility;
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase
+          .from('social_posts')
+          .update({
+            caption: post.caption,
+            activity_type: post.activityType,
+            place_tag: post.placeTag,
+            visibility: post.visibility
+          })
+          .eq('id', postId);
+      } catch {
+        // Fallback
+      }
+    }
+
+    this.persist();
+    return { ...post };
+  }
+
+  /**
+   * Delete Post (Author only)
+   */
+  async deletePost(postId: string): Promise<boolean> {
+    const prevCount = this.posts.length;
+    this.posts = this.posts.filter((p) => p.id !== postId);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('social_posts').delete().eq('id', postId);
+      } catch {
+        // Fallback
+      }
+    }
+
+    this.persist();
+    return this.posts.length < prevCount;
+  }
+
+  /**
+   * Block User (hide their strides and prevent interactions)
+   */
+  async blockUser(targetUserId: string): Promise<boolean> {
+    this.blockedUserIds.add(targetUserId);
+    this.persist();
+    return true;
+  }
+
+  /**
+   * Unblock User
+   */
+  async unblockUser(targetUserId: string): Promise<boolean> {
+    this.blockedUserIds.delete(targetUserId);
+    this.persist();
+    return true;
+  }
+
+  isUserBlocked(userId: string): boolean {
+    return this.blockedUserIds.has(userId);
+  }
+
+  getBlockedUsers(): string[] {
+    return Array.from(this.blockedUserIds);
+  }
+
+  /**
+   * Get Posts by User ID with privacy protection
+   */
+  async getUserPosts(userId: string, viewerId: string = 'curr_user'): Promise<SocialPost[]> {
+    // If user is blocked, return empty
+    if (this.blockedUserIds.has(userId)) return [];
+
+    const isAuthor = userId === viewerId || viewerId === 'curr_user' || userId === 'self';
+    const profile = this.profiles.find((pr) => pr.id === userId);
+    const isFollower = profile?.isFollowing ?? false;
+
+    // If account is private and viewer is not following and not self -> protect private posts!
+    if (profile?.isPrivate && !isFollower && !isAuthor) {
+      return [];
+    }
+
+    return this.posts.filter((p) => {
+      if (p.userId !== userId) return false;
+      if (this.reportedPostIds.has(p.id)) return false;
+      if (this.blockedUserIds.has(p.userId)) return false;
+
+      // Privacy protection for non-authors
+      if (!isAuthor) {
+        if (p.visibility === 'private') return false;
+        if (p.visibility === 'followers_only' && !isFollower) return false;
+        if (p.isPrivateAccount && !isFollower) return false;
+      }
+
+      return true;
+    });
   }
 
   /**
@@ -627,6 +777,38 @@ class SocialService {
 
   getAccountPrivacy(): boolean {
     return this.userAccountPrivacy;
+  }
+
+  /**
+   * Synchronize profile edits with social state
+   */
+  async updateCurrentUserProfile(profileData: {
+    name?: string;
+    username?: string;
+    bio?: string;
+    city?: string;
+    avatar?: string;
+    isPrivate?: boolean;
+  }): Promise<void> {
+    if (profileData.isPrivate !== undefined) {
+      this.userAccountPrivacy = profileData.isPrivate;
+    }
+
+    // Update existing posts by current user with updated name/avatar
+    this.posts = this.posts.map((p) => {
+      if (p.userId === 'curr_user' || p.userId === 'u_priya' || p.userId === 'self') {
+        return {
+          ...p,
+          userName: profileData.name || p.userName,
+          userAvatar: profileData.avatar || p.userAvatar,
+          isPrivateAccount:
+            profileData.isPrivate !== undefined ? profileData.isPrivate : p.isPrivateAccount
+        };
+      }
+      return p;
+    });
+
+    this.persist();
   }
 }
 

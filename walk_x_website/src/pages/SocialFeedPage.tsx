@@ -173,6 +173,40 @@ export const SocialFeedPage: React.FC<SocialFeedPageProps> = ({
     }
   };
 
+  // Edit post action (Author only)
+  const handleEditPost = async (postId: string, updates: any) => {
+    try {
+      const updated = await socialService.updatePost(postId, updates);
+      setPosts((prev) => prev.map((p) => (p.id === postId ? updated : p)));
+      showToast('Stride post updated successfully.');
+    } catch {
+      showToast('Unable to update post.');
+    }
+  };
+
+  // Delete post action (Author only)
+  const handleDeletePost = async (postId: string) => {
+    try {
+      await socialService.deletePost(postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      showToast('Stride post deleted.');
+    } catch {
+      showToast('Unable to delete post.');
+    }
+  };
+
+  // Block user action
+  const handleBlockUser = async (targetUserId: string, targetUserName: string) => {
+    try {
+      await socialService.blockUser(targetUserId);
+      setPosts((prev) => prev.filter((p) => p.userId !== targetUserId));
+      setSuggestedProfiles((prev) => prev.filter((p) => p.id !== targetUserId));
+      showToast(`Blocked @${targetUserName.toLowerCase().replace(/\s+/g, '_')}. Their strides are now hidden.`);
+    } catch {
+      showToast('Action failed.');
+    }
+  };
+
   // Filter posts by search query if any
   const displayedPosts = searchQuery.trim()
     ? posts.filter(
@@ -408,6 +442,9 @@ export const SocialFeedPage: React.FC<SocialFeedPageProps> = ({
                     onReport={(id, authorName) => setReportingPost({ id, authorName })}
                     onViewProfile={onViewProfile}
                     currentUserId={user.id || 'curr_user'}
+                    onEditPost={handleEditPost}
+                    onDeletePost={handleDeletePost}
+                    onBlockUser={handleBlockUser}
                   />
                 ))}
               </div>

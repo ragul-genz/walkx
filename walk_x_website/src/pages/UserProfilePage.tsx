@@ -12,13 +12,15 @@ import {
   Check,
   ShieldCheck,
   Heart,
-  MessageCircle
+  MessageCircle,
+  Ban
 } from 'lucide-react';
 import {
   SocialUserProfile,
   SocialPost,
   UserProfile,
-  ReportReason
+  ReportReason,
+  PageId
 } from '../types';
 import { socialService } from '../services/socialService';
 import { PostCard } from '../components/social/PostCard';
@@ -29,6 +31,7 @@ interface UserProfilePageProps {
   currentUser: UserProfile;
   onBack: () => void;
   onViewProfile: (userId: string) => void;
+  onNavigate?: (page: PageId) => void;
   showToast: (msg: string) => void;
 }
 
@@ -37,6 +40,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
   currentUser,
   onBack,
   onViewProfile,
+  onNavigate,
   showToast
 }) => {
   const [profile, setProfile] = useState<SocialUserProfile | null>(null);
@@ -234,7 +238,16 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
                 </div>
               </div>
 
-              {!isSelf && (
+              {isSelf ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onNavigate && onNavigate('profile')}
+                    className="px-5 py-2.5 rounded-2xl text-xs font-bold bg-white/[0.08] hover:bg-white/[0.15] text-white border border-white/10 transition-all flex items-center gap-1.5 shadow-md"
+                  >
+                    <span>Edit Profile Settings</span>
+                  </button>
+                </div>
+              ) : (
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleFollowToggle}
@@ -251,6 +264,18 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
                       : profile.followStatus === 'requested'
                       ? 'Request Sent'
                       : '+ Follow Walker'}
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      await socialService.blockUser(profile.id);
+                      showToast(`Blocked @${profile.username}. Their strides and profile are hidden.`);
+                      onBack();
+                    }}
+                    className="p-2.5 rounded-2xl bg-slate-800/80 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-white/10 transition-all"
+                    title={`Block @${profile.username}`}
+                  >
+                    <Ban size={15} />
                   </button>
                 </div>
               )}
@@ -398,6 +423,21 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
                     onReport={(id, authorName) => setReportingPost({ id, authorName })}
                     onViewProfile={onViewProfile}
                     currentUserId={currentUser.id || 'curr_user'}
+                    onEditPost={async (postId, updates) => {
+                      const updated = await socialService.updatePost(postId, updates);
+                      setPosts((prev) => prev.map((p) => (p.id === postId ? updated : p)));
+                      showToast('Stride post updated.');
+                    }}
+                    onDeletePost={async (postId) => {
+                      await socialService.deletePost(postId);
+                      setPosts((prev) => prev.filter((p) => p.id !== postId));
+                      showToast('Stride post deleted.');
+                    }}
+                    onBlockUser={async (targetId, targetName) => {
+                      await socialService.blockUser(targetId);
+                      showToast(`Blocked @${targetName.toLowerCase().replace(/\s+/g, '_')}.`);
+                      onBack();
+                    }}
                   />
                 ))}
               </div>

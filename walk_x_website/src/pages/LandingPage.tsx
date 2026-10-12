@@ -21,7 +21,10 @@ import {
   Award,
   HelpCircle,
   Activity,
-  HandHeart
+  HandHeart,
+  Compass,
+  Trophy,
+  Users
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -92,75 +95,101 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenStep
           {/* Eyebrow badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/25 text-purple-300 text-xs font-bold mb-8 purple-glow">
             <Sparkles size={14} className="text-cyan-400" />
-            <span className="tracking-wide">Health • Rewards • Social Impact</span>
+            <span className="tracking-wide">Social Media • Real Activities • Places • Leaderboards • Challenges</span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-slate-300">Live Platform</span>
+            <span className="text-slate-300">All Age Groups</span>
           </div>
 
           {/* Hero Headline */}
-          <h1 className="font-['Outfit'] font-black text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight max-w-5xl mx-auto leading-[1.05] mb-6 text-white">
-            Every Step Has Value.
+          <h1 className="font-['Outfit'] font-black text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight max-w-5xl mx-auto leading-[1.08] mb-6 text-white">
+            The Modern Social & Activity Platform For All Ages.
           </h1>
 
           {/* Supporting Text */}
-          <p className="text-lg sm:text-xl md:text-2xl font-semibold text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed">
-            Walk towards a healthier life. Earn rewards. Make a difference.
+          <p className="text-base sm:text-lg md:text-xl font-medium text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed">
+            Share your daily strides, discover scenic walking routes, connect with others, participate in friendly competitions, and track your personal progress in one easy-to-use platform.
           </p>
 
           {/* Primary Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-16">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-xl mx-auto mb-12">
             <button
               onClick={() => onNavigate('register')}
               className="w-full sm:w-auto px-8 py-4 rounded-2xl gradient-btn font-extrabold text-base flex items-center justify-center gap-2 group shadow-xl cursor-pointer"
             >
-              <span>Get Started</span>
+              <span>Get Started Free</span>
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <button
-              onClick={() => onNavigate('login')}
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] text-white border border-white/15 font-bold text-base transition-all flex items-center justify-center gap-2 cursor-pointer"
+              onClick={() => onNavigate('feed')}
+              className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] text-white border border-white/15 font-bold text-base transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>Login</span>
+              <Users size={16} className="text-cyan-400" />
+              <span>Explore Community</span>
             </button>
             <button
-              onClick={onOpenStepModal}
-              className="w-full sm:w-auto px-5 py-4 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              onClick={() => onNavigate('places')}
+              className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold text-base transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Footprints size={15} className="text-cyan-400" />
-              <span>Simulate Steps</span>
+              <Compass size={16} className="text-purple-400" />
+              <span>Discover Places</span>
             </button>
           </div>
 
-          {/* Core Transparent Value Pillars (Verified Rules, No Fake Claims) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">
-            <div className="glass-panel p-5 rounded-2xl border border-white/[0.08] flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
-                <Coins size={20} />
+          {/* The 5 Pillars of WalkX Platform */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 max-w-6xl mx-auto text-left mb-6">
+            <div
+              onClick={() => onNavigate('feed')}
+              className="glass-panel p-4 rounded-2xl border border-white/[0.08] hover:border-purple-500/40 cursor-pointer transition-all hover:scale-[1.02]"
+            >
+              <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center mb-2.5">
+                <Users size={18} />
               </div>
-              <div>
-                <span className="text-xs text-slate-400 font-semibold block">Fixed Rate</span>
-                <span className="text-sm font-bold text-white">1,000 Steps = 10 Pts</span>
-              </div>
+              <h3 className="text-xs font-bold text-white mb-0.5">Social Activity Feed</h3>
+              <p className="text-[11px] text-slate-400 leading-snug">Share strides, photos, high-fives & comments</p>
             </div>
 
-            <div className="glass-panel p-5 rounded-2xl border border-white/[0.08] flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                <Wallet size={20} />
+            <div
+              onClick={() => onNavigate('activity')}
+              className="glass-panel p-4 rounded-2xl border border-white/[0.08] hover:border-cyan-500/40 cursor-pointer transition-all hover:scale-[1.02]"
+            >
+              <div className="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center mb-2.5">
+                <Activity size={18} />
               </div>
-              <div>
-                <span className="text-xs text-slate-400 font-semibold block">Instant Payout</span>
-                <span className="text-sm font-bold text-white">Direct UPI Transfer</span>
-              </div>
+              <h3 className="text-xs font-bold text-white mb-0.5">Real-World Tracking</h3>
+              <p className="text-[11px] text-slate-400 leading-snug">Step sensor sync, streaks, calories & goals</p>
             </div>
 
-            <div className="glass-panel p-5 rounded-2xl border border-white/[0.08] flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-pink-500/15 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0">
-                <Heart size={20} />
+            <div
+              onClick={() => onNavigate('places')}
+              className="glass-panel p-4 rounded-2xl border border-white/[0.08] hover:border-emerald-500/40 cursor-pointer transition-all hover:scale-[1.02]"
+            >
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center mb-2.5">
+                <Compass size={18} />
               </div>
-              <div>
-                <span className="text-xs text-slate-400 font-semibold block">100% Pass-Through</span>
-                <span className="text-sm font-bold text-white">Vetted Non-Profit Causes</span>
+              <h3 className="text-xs font-bold text-white mb-0.5">Places Discovery</h3>
+              <p className="text-[11px] text-slate-400 leading-snug">Scenic trails, urban parks & senior-safe loops</p>
+            </div>
+
+            <div
+              onClick={() => onNavigate('leaderboards')}
+              className="glass-panel p-4 rounded-2xl border border-white/[0.08] hover:border-amber-500/40 cursor-pointer transition-all hover:scale-[1.02]"
+            >
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center mb-2.5">
+                <Trophy size={18} />
               </div>
+              <h3 className="text-xs font-bold text-white mb-0.5">All-Age Leaderboards</h3>
+              <p className="text-[11px] text-slate-400 leading-snug">Friendly divisions with verified sensor tracking</p>
+            </div>
+
+            <div
+              onClick={() => onNavigate('challenges')}
+              className="glass-panel p-4 rounded-2xl border border-white/[0.08] hover:border-blue-500/40 cursor-pointer transition-all hover:scale-[1.02]"
+            >
+              <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center mb-2.5">
+                <Zap size={18} />
+              </div>
+              <h3 className="text-xs font-bold text-white mb-0.5">Community Quests</h3>
+              <p className="text-[11px] text-slate-400 leading-snug">Conquer collective goals, earn badges & bonus points</p>
             </div>
           </div>
         </div>

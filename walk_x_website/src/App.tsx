@@ -44,6 +44,9 @@ import { DonationHistoryPage } from './pages/DonationHistoryPage';
 import { ProfileSettingsPage } from './pages/ProfileSettingsPage';
 import { SocialFeedPage } from './pages/SocialFeedPage';
 import { UserProfilePage } from './pages/UserProfilePage';
+import { PlacesDiscoveryPage } from './pages/PlacesDiscoveryPage';
+import { LeaderboardsPage } from './pages/LeaderboardsPage';
+import { CommunityChallengesPage } from './pages/CommunityChallengesPage';
 
 // Admin Pages
 import { AdminLoginPage } from './pages/AdminLoginPage';
@@ -70,6 +73,9 @@ const validPages: PageId[] = [
   'dashboard',
   'activity',
   'feed',
+  'places',
+  'leaderboards',
+  'challenges',
   'user-profile',
   'wallet',
   'rewards',
@@ -699,6 +705,31 @@ export const App: React.FC = () => {
                   currentUser={user}
                   onBack={() => setCurrentPage('feed')}
                   onViewProfile={handleViewUserProfile}
+                  showToast={showToast}
+                />
+              );
+
+            case 'places':
+              return (
+                <PlacesDiscoveryPage
+                  onNavigate={setCurrentPage}
+                  showToast={showToast}
+                />
+              );
+
+            case 'leaderboards':
+              return (
+                <LeaderboardsPage
+                  onNavigate={setCurrentPage}
+                  onViewProfile={handleViewUserProfile}
+                  showToast={showToast}
+                />
+              );
+
+            case 'challenges':
+              return (
+                <CommunityChallengesPage
+                  onNavigate={setCurrentPage}
                   showToast={showToast}
                 />
               );

@@ -6,6 +6,9 @@ export type PageId =
   | 'dashboard'
   | 'activity'
   | 'feed'
+  | 'places'
+  | 'leaderboards'
+  | 'challenges'
   | 'user-profile'
   | 'wallet'
   | 'rewards'
@@ -259,5 +262,102 @@ export interface SocialUserProfile {
   badgeTitle: string;
   joinDate: string;
 }
+
+// ==========================================
+// PLACES DISCOVERY TYPES
+// ==========================================
+
+export type PlaceSuitability =
+  | 'All Ages'
+  | 'Senior Friendly'
+  | 'Stroller & Family'
+  | 'Pet Friendly'
+  | 'Brisk Walkers';
+
+export type PlaceDifficulty = 'Gentle & Flat' | 'Moderate' | 'Challenging Incline';
+
+export interface WalkingPlace {
+  id: string;
+  title: string;
+  category: 'Urban Park' | 'Waterfront Promenade' | 'Nature Trail' | 'Historic Walk' | 'Neighborhood Loop';
+  location: string;
+  city: string;
+  distanceKm: number;
+  estimatedSteps: number;
+  durationMinutes: number;
+  difficulty: PlaceDifficulty;
+  suitability: PlaceSuitability[];
+  rating: number;
+  reviewsCount: number;
+  checkInsCount: number;
+  hasShade: boolean;
+  hasBenches: boolean;
+  hasRestrooms: boolean;
+  hasWaterFountains: boolean;
+  isWheelchairAccessible: boolean;
+  imageUrl: string;
+  gallery: string[];
+  description: string;
+  tips: string;
+  popularTime: string;
+  isCheckedIn?: boolean;
+}
+
+// ==========================================
+// LEADERBOARDS & COMPETITIONS TYPES
+// ==========================================
+
+export type AgeBracket = 'all' | 'teens' | 'young_adults' | 'prime' | 'golden';
+export type LeaderboardTimeframe = 'this_week' | 'this_month' | 'all_time';
+export type LeaderboardCategory = 'steps' | 'streak' | 'charity' | 'places_explored';
+
+export interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  name: string;
+  username: string;
+  avatar: string;
+  badgeTitle: string;
+  ageBracket: AgeBracket;
+  city: string;
+  steps: number;
+  streakDays: number;
+  charityPointsDonated: number;
+  placesExplored: number;
+  isVerifiedSensor: boolean;
+  isCurrentUser?: boolean;
+}
+
+// ==========================================
+// COMMUNITY CHALLENGES TYPES
+// ==========================================
+
+export type ChallengeAudience =
+  | 'All Ages'
+  | 'Seniors & Gentle Walkers'
+  | 'Daily Commuters'
+  | 'Weekend Explorers'
+  | 'Charity Champions';
+
+export interface CommunityChallenge {
+  id: string;
+  title: string;
+  subtitle: string;
+  audience: ChallengeAudience;
+  goalSteps: number;
+  currentSteps: number;
+  daysRemaining: number;
+  totalDays: number;
+  participantsCount: number;
+  joined: boolean;
+  rewardPoints: number;
+  badgeName: string;
+  badgeIcon: string;
+  bannerImage: string;
+  description: string;
+  organizer: string;
+  category: 'distance' | 'streak' | 'places' | 'charity';
+}
+
 
 

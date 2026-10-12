@@ -12,7 +12,10 @@ import {
   ArrowRight,
   Database,
   User,
-  Users
+  Users,
+  Compass,
+  Trophy,
+  Zap
 } from 'lucide-react';
 import { isSupabaseConfigured } from '../services/supabaseClient';
 
@@ -42,10 +45,12 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Overview', page: 'landing' },
     { label: 'Dashboard', page: 'dashboard', icon: Smartphone },
     { label: 'Feed', page: 'feed', icon: Users },
+    { label: 'Places', page: 'places', icon: Compass },
+    { label: 'Leaderboard', page: 'leaderboards', icon: Trophy },
+    { label: 'Challenges', page: 'challenges', icon: Zap },
     { label: 'Activity', page: 'activity', icon: Activity },
-    { label: 'Points Wallet', page: 'wallet', icon: Wallet },
-    { label: 'Rewards Store', page: 'rewards', icon: Gift },
-    { label: 'Donate to Causes', page: 'donation', icon: Heart },
+    { label: 'Rewards', page: 'rewards', icon: Gift },
+    { label: 'Causes', page: 'donation', icon: Heart },
   ];
 
   return (

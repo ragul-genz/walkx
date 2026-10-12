@@ -26,7 +26,11 @@ import {
   ShieldAlert,
   Calendar,
   CreditCard,
-  Sliders
+  Sliders,
+  Users,
+  Compass,
+  Trophy,
+  Zap
 } from 'lucide-react';
 import { UserProfile, StrideData, Transaction, CauseItem, PageId } from '../types';
 
@@ -95,11 +99,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const navMenuItems = [
     { id: 'dashboard', label: 'Overview', icon: Smartphone, page: 'dashboard' as PageId, active: true },
+    { id: 'feed', label: 'Social Activity Feed', icon: Users, page: 'feed' as PageId, active: false, badge: 'Community' },
+    { id: 'places', label: 'Discover Places', icon: Compass, page: 'places' as PageId, active: false },
+    { id: 'leaderboards', label: 'Leaderboard & Divisions', icon: Trophy, page: 'leaderboards' as PageId, active: false },
+    { id: 'challenges', label: 'Community Quests', icon: Zap, page: 'challenges' as PageId, active: false },
     { id: 'activity', label: 'Activity Telemetry', icon: Activity, page: 'activity' as PageId, active: false },
     { id: 'wallet', label: 'Points Wallet', icon: Wallet, page: 'wallet' as PageId, active: false, badge: `₹${availableInr}` },
     { id: 'rewards', label: 'Rewards Store', icon: Gift, page: 'rewards' as PageId, active: false },
     { id: 'donation', label: 'Walk for Causes', icon: Heart, page: 'donation' as PageId, active: false },
-    { id: 'history', label: 'Donation Ledger & 80G', icon: ShieldCheck, page: 'donation-history' as PageId, active: false },
+    { id: 'history', label: 'Donation Ledger', icon: ShieldCheck, page: 'donation-history' as PageId, active: false },
     { id: 'profile', label: 'Profile & Settings', icon: User, page: 'profile' as PageId, active: false },
   ];
 

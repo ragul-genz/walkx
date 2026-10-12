@@ -147,3 +147,14 @@ export interface AdminReportMetric {
   growthPercent: number;
   trend: 'up' | 'down';
 }
+
+export type AdminSection =
+  | 'overview'
+  | 'users'
+  | 'points'
+  | 'rewards'
+  | 'donations'
+  | 'reports'
+  | 'settings'
+  | 'audit';
+

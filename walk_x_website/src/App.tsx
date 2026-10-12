@@ -8,9 +8,7 @@ import {
   RewardItem,
   RedemptionRecord,
   CauseItem,
-  DonationRecord,
-  AdminUser,
-  AdminReportMetric,
+  DonationRecord
 } from './types';
 import {
   initialUserProfile,
@@ -19,9 +17,7 @@ import {
   initialRewards,
   initialRedemptions,
   initialCauses,
-  initialDonationsList,
-  initialAdminUsers,
-  adminKpiMetrics,
+  initialDonationsList
 } from './data/demoData';
 
 // Shared Components
@@ -29,7 +25,6 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Modal } from './components/Modal';
 import { DonationModal } from './components/DonationModal';
-import { AdminNavHeader } from './components/AdminNavHeader';
 
 // User & Public Pages
 import { LandingPage } from './pages/LandingPage';
@@ -47,10 +42,6 @@ import { ProfileSettingsPage } from './pages/ProfileSettingsPage';
 // Admin Pages
 import { AdminLoginPage } from './pages/AdminLoginPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { AdminUsersPage } from './pages/AdminUsersPage';
-import { AdminRewardsPage } from './pages/AdminRewardsPage';
-import { AdminDonationsPage } from './pages/AdminDonationsPage';
-import { AdminReportsPage } from './pages/AdminReportsPage';
 
 // Legal Pages
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
@@ -140,8 +131,6 @@ export const App: React.FC = () => {
   const [redemptions, setRedemptions] = useState<RedemptionRecord[]>(initialRedemptions);
   const [causes, setCauses] = useState<CauseItem[]>(initialCauses);
   const [donations, setDonations] = useState<DonationRecord[]>(initialDonationsList);
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(initialAdminUsers);
-  const [metrics] = useState<AdminReportMetric[]>(adminKpiMetrics);
 
   // Global Toast Alert State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -453,70 +442,6 @@ export const App: React.FC = () => {
     showToast(`Reward unlocked: "${item.title}"! Delivery to ${target}.`);
   };
 
-  // Admin Handlers
-  const handleToggleUserStatus = (userId: string) => {
-    setAdminUsers((prev) =>
-      prev.map((u) =>
-        u.id === userId
-          ? { ...u, status: u.status === 'Active' ? 'Suspended' : 'Active' }
-          : u
-      )
-    );
-    showToast('Walker account status updated.');
-  };
-
-  const handleUpdateRole = (userId: string, newRole: 'User' | 'Moderator' | 'Admin') => {
-    setAdminUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
-    );
-    showToast(`User role elevated to ${newRole}.`);
-  };
-
-  const handleAddAdminUser = (newUser: Omit<AdminUser, 'id'>) => {
-    const created: AdminUser = {
-      ...newUser,
-      id: `adm_u${Date.now()}`,
-    };
-    setAdminUsers((prev) => [created, ...prev]);
-    showToast(`Added walker "${newUser.name}".`);
-  };
-
-  const handleAddReward = (newReward: RewardItem) => {
-    setRewards((prev) => [newReward, ...prev]);
-    showToast(`Added new reward: "${newReward.title}".`);
-  };
-
-  const handleToggleRewardUnlocked = (rewardId: string) => {
-    setRewards((prev) =>
-      prev.map((r) => (r.id === rewardId ? { ...r, unlocked: !r.unlocked } : r))
-    );
-    showToast('Reward availability updated.');
-  };
-
-  const handleUpdateRewardStock = (rewardId: string, delta: number) => {
-    setRewards((prev) =>
-      prev.map((r) =>
-        r.id === rewardId ? { ...r, stockCount: Math.max(0, r.stockCount + delta) } : r
-      )
-    );
-    showToast('Stock quantity updated.');
-  };
-
-  const handleAddCause = (newCause: CauseItem) => {
-    setCauses((prev) => [newCause, ...prev]);
-    showToast(`Cause "${newCause.title}" published.`);
-  };
-
-  const handleUpdateDonationStatus = (
-    donationId: string,
-    newStatus: 'Verified' | 'Pending Review' | 'Flagged'
-  ) => {
-    setDonations((prev) =>
-      prev.map((d) => (d.id === donationId ? { ...d, status: newStatus } : d))
-    );
-    showToast(`Pledge status updated to ${newStatus}.`);
-  };
-
   // Determine if on admin page
   const isAdminPage =
     currentPage.startsWith('admin-') && currentPage !== 'admin-login';
@@ -543,18 +468,7 @@ export const App: React.FC = () => {
       />
 
       {/* Page Body Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Admin Subheader Bar (Visible on Admin Pages) */}
-        {isAdminPage && (
-          <AdminNavHeader
-            currentPage={currentPage}
-            onNavigate={setCurrentPage}
-            onExitAdmin={() => {
-              setIsAdmin(false);
-              setCurrentPage('dashboard');
-            }}
-          />
-        )}
+      <main className={`flex-1 w-full mx-auto ${isAdminPage ? 'max-w-[1600px] px-0 py-0' : 'max-w-7xl px-4 sm:px-6 lg:px-8 py-8'}`}>
 
         {/* Dynamic Page Switcher */}
         {(() => {
@@ -683,43 +597,62 @@ export const App: React.FC = () => {
             case 'admin-dashboard':
               return (
                 <AdminDashboardPage
-                  metrics={metrics}
+                  initialSection="overview"
                   onNavigate={setCurrentPage}
+                  onExitAdmin={() => {
+                    setIsAdmin(false);
+                    setCurrentPage('dashboard');
+                  }}
                 />
               );
 
             case 'admin-users':
               return (
-                <AdminUsersPage
-                  users={adminUsers}
-                  onToggleUserStatus={handleToggleUserStatus}
-                  onUpdateRole={handleUpdateRole}
-                  onAddUser={handleAddAdminUser}
+                <AdminDashboardPage
+                  initialSection="users"
+                  onNavigate={setCurrentPage}
+                  onExitAdmin={() => {
+                    setIsAdmin(false);
+                    setCurrentPage('dashboard');
+                  }}
                 />
               );
 
             case 'admin-rewards':
               return (
-                <AdminRewardsPage
-                  rewards={rewards}
-                  onAddReward={handleAddReward}
-                  onToggleUnlocked={handleToggleRewardUnlocked}
-                  onUpdateStock={handleUpdateRewardStock}
+                <AdminDashboardPage
+                  initialSection="rewards"
+                  onNavigate={setCurrentPage}
+                  onExitAdmin={() => {
+                    setIsAdmin(false);
+                    setCurrentPage('dashboard');
+                  }}
                 />
               );
 
             case 'admin-donations':
               return (
-                <AdminDonationsPage
-                  causes={causes}
-                  donations={donations}
-                  onAddCause={handleAddCause}
-                  onUpdateDonationStatus={handleUpdateDonationStatus}
+                <AdminDashboardPage
+                  initialSection="donations"
+                  onNavigate={setCurrentPage}
+                  onExitAdmin={() => {
+                    setIsAdmin(false);
+                    setCurrentPage('dashboard');
+                  }}
                 />
               );
 
             case 'admin-reports':
-              return <AdminReportsPage />;
+              return (
+                <AdminDashboardPage
+                  initialSection="reports"
+                  onNavigate={setCurrentPage}
+                  onExitAdmin={() => {
+                    setIsAdmin(false);
+                    setCurrentPage('dashboard');
+                  }}
+                />
+              );
 
             case 'privacy':
               return <PrivacyPolicyPage onNavigate={setCurrentPage} />;

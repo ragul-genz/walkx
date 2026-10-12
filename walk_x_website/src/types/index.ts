@@ -89,15 +89,25 @@ export interface PointsConfig {
   minWithdrawalInr: number;
 }
 
+export type CauseCategory = 'Education' | 'Healthcare' | 'Food support' | 'Environment';
+
 export interface CauseItem {
   id: string;
   title: string;
   tagline: string;
   description: string;
-  category: 'Education' | 'Healthcare' | 'Elderly' | 'Community' | 'Environment';
+  category: CauseCategory;
+  imageUrl?: string;
   icon: string;
+  organizationName: string;
+  organizationType: string;
+  organizationLocation: string;
+  registrationNumber: string;
+  sampleDisclaimer?: string;
   raisedAmount: number;
   targetAmount: number;
+  targetPoints?: number;
+  raisedPoints?: number;
   donorsCount: number;
   verifiedPartner: string;
 }
@@ -108,11 +118,15 @@ export interface DonationRecord {
   donorName: string;
   donorEmail: string;
   causeTitle: string;
+  causeCategory?: CauseCategory;
   amountInr: number;
   pointsEquivalent: number;
+  contributionType: 'Points Contribution' | 'Monetary Pledge';
   date: string;
-  status: 'Verified' | 'Pending Review' | 'Flagged';
-  paymentMethod: 'WalkX Points' | 'Razorpay UPI' | 'Card';
+  status: 'Verified' | 'Pending Review' | 'Flagged' | 'Points Pledged (Demo)' | 'Monetary Pledge (Prepared Integration)';
+  paymentMethod: string;
+  isDemoRecord: boolean;
+  notes?: string;
 }
 
 export interface AdminUser {

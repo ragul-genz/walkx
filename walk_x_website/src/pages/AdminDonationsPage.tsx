@@ -29,6 +29,10 @@ export const AdminDonationsPage: React.FC<AdminDonationsPageProps> = ({
     description: '',
     category: 'Education',
     icon: '📚',
+    organizationName: '',
+    organizationType: 'Registered Non-Profit (Sample)',
+    organizationLocation: 'Tamil Nadu, India',
+    registrationNumber: 'SAMPLE-NGO-TN-2024',
     targetAmount: 50000,
     verifiedPartner: '',
   });
@@ -39,9 +43,12 @@ export const AdminDonationsPage: React.FC<AdminDonationsPageProps> = ({
   const handleCreateCause = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCause.title || !newCause.verifiedPartner) return;
+    const org = newCause.organizationName || newCause.verifiedPartner;
     onAddCause({
       ...newCause,
       id: `cause_${Date.now()}`,
+      organizationName: org,
+      verifiedPartner: `${org} (Sample Partner)`,
       raisedAmount: 0,
       donorsCount: 0,
     });
@@ -277,8 +284,7 @@ export const AdminDonationsPage: React.FC<AdminDonationsPageProps> = ({
                 >
                   <option value="Education">Education</option>
                   <option value="Healthcare">Healthcare</option>
-                  <option value="Elderly">Elderly Care</option>
-                  <option value="Community">Community & Water</option>
+                  <option value="Food support">Food support</option>
                   <option value="Environment">Environment</option>
                 </select>
               </div>

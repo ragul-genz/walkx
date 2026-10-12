@@ -28,6 +28,7 @@ import {
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Modal } from './components/Modal';
+import { DonationModal } from './components/DonationModal';
 import { AdminNavHeader } from './components/AdminNavHeader';
 
 // User & Public Pages
@@ -58,7 +59,6 @@ import { TermsConditionsPage } from './pages/TermsConditionsPage';
 // Icons for Modals
 import {
   Footprints,
-  Heart,
   CheckCircle2,
   CreditCard,
   Sparkles
@@ -176,7 +176,7 @@ export const App: React.FC = () => {
 
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
   const [activeDonationCause, setActiveDonationCause] = useState<CauseItem | null>(null);
-  const [donatePointsAmt, setDonatePointsAmt] = useState(1000);
+  const [donationInitialMode, setDonationInitialMode] = useState<'points' | 'monetary'>('points');
 
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
   const [activeRedeemItem, setActiveRedeemItem] = useState<RewardItem | null>(null);
@@ -276,62 +276,63 @@ export const App: React.FC = () => {
   };
 
   // Handlers: Donate
-  const handleOpenDonate = (cause?: CauseItem) => {
+  const handleOpenDonate = (cause?: CauseItem, initialMode: 'points' | 'monetary' = 'points') => {
     setActiveDonationCause(cause || causes[0]);
+    setDonationInitialMode(initialMode);
     setIsDonateModalOpen(true);
   };
 
-  const handleConfirmDonation = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeDonationCause) return;
-
-    if (user.totalPoints < donatePointsAmt) {
+  const handleConfirmPointsDonation = (cause: CauseItem, pointsAmt: number, inrValue: number) => {
+    if (user.totalPoints < pointsAmt) {
       showToast(`Insufficient balance: You have ${user.totalPoints.toLocaleString()} points.`);
       return;
     }
 
-    const inrValue = Number(((donatePointsAmt / 1000) * 11).toFixed(2));
-
     setUser((prev) => ({
       ...prev,
-      totalPoints: prev.totalPoints - donatePointsAmt,
-      donatedPoints: prev.donatedPoints + donatePointsAmt,
+      totalPoints: prev.totalPoints - pointsAmt,
+      donatedPoints: prev.donatedPoints + pointsAmt,
     }));
 
     // Update Cause funding
     setCauses((prev) =>
       prev.map((c) =>
-        c.id === activeDonationCause.id
+        c.id === cause.id
           ? {
               ...c,
               raisedAmount: c.raisedAmount + inrValue,
+              raisedPoints: (c.raisedPoints || 0) + pointsAmt,
               donorsCount: c.donorsCount + 1,
             }
           : c
       )
     );
 
-    // New Donation Record
-    const refNum = `WX-DN-${Math.floor(1000 + Math.random() * 9000)}`;
+    // New Donation Record (Transparent Sample Record)
+    const refNum = `WX-PTS-${Math.floor(1000 + Math.random() * 9000)}`;
     const newDonation: DonationRecord = {
       id: `dn_${Date.now()}`,
       referenceNumber: refNum,
       donorName: user.name,
       donorEmail: user.email,
-      causeTitle: activeDonationCause.title,
+      causeTitle: cause.title,
+      causeCategory: cause.category,
       amountInr: inrValue,
-      pointsEquivalent: donatePointsAmt,
+      pointsEquivalent: pointsAmt,
+      contributionType: 'Points Contribution',
       date: 'Just now',
-      status: 'Verified',
+      status: 'Points Pledged (Demo)',
       paymentMethod: 'WalkX Points',
+      isDemoRecord: true,
+      notes: 'Simulated points deduction from active walker pool. No real bank transfer.'
     };
     setDonations((prev) => [newDonation, ...prev]);
 
     const newTx: Transaction = {
       id: `tx_${Date.now()}`,
-      title: 'Charity Micro-Donation',
-      detail: `Sponsorship to ${activeDonationCause.title} (${refNum})`,
-      points: donatePointsAmt,
+      title: `Points Contribution: ${cause.title}`,
+      detail: `Sponsorship to ${cause.category} (${refNum})`,
+      points: pointsAmt,
       type: 'debit',
       date: 'Just now',
       category: 'donation',
@@ -339,9 +340,51 @@ export const App: React.FC = () => {
     };
     setTransactions((prev) => [newTx, ...prev]);
 
-    setIsDonateModalOpen(false);
     triggerCelebration();
-    showToast(`Thank you! Donated ${donatePointsAmt.toLocaleString()} pts to ${activeDonationCause.title}!`);
+    showToast(`Thank you! Pledged ${pointsAmt.toLocaleString()} pts to ${cause.title}!`);
+  };
+
+  const handleConfirmMonetaryPledge = (
+    cause: CauseItem,
+    inrAmount: number,
+    donorName: string,
+    donorEmail: string,
+    paymentMethod: string
+  ) => {
+    // Update Cause funding
+    setCauses((prev) =>
+      prev.map((c) =>
+        c.id === cause.id
+          ? {
+              ...c,
+              raisedAmount: c.raisedAmount + inrAmount,
+              donorsCount: c.donorsCount + 1,
+            }
+          : c
+      )
+    );
+
+    const refNum = `WX-PLG-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newDonation: DonationRecord = {
+      id: `dn_${Date.now()}`,
+      referenceNumber: refNum,
+      donorName,
+      donorEmail,
+      causeTitle: cause.title,
+      causeCategory: cause.category,
+      amountInr: inrAmount,
+      pointsEquivalent: Math.round((inrAmount / 11) * 1000),
+      contributionType: 'Monetary Pledge',
+      date: 'Just now',
+      status: 'Monetary Pledge (Prepared Integration)',
+      paymentMethod,
+      isDemoRecord: true,
+      notes: 'Prepared payment UI demonstration. Awaiting real payment provider integration.'
+    };
+    setDonations((prev) => [newDonation, ...prev]);
+
+    triggerCelebration();
+    showToast(`Monetary pledge of ₹${inrAmount} logged (Prepared Integration Sandbox)!`);
   };
 
   // Handlers: Redeem Reward
@@ -828,66 +871,17 @@ export const App: React.FC = () => {
         </form>
       </Modal>
 
-      {/* MODAL 3: Donate to Cause */}
-      <Modal
+      {/* MODAL 3: Donate to Cause (Points & Prepared Monetary Sandbox) */}
+      <DonationModal
         isOpen={isDonateModalOpen}
         onClose={() => setIsDonateModalOpen(false)}
-        title="Sponsor Verified Cause"
-        subtitle={activeDonationCause ? activeDonationCause.title : 'Direct non-profit funding pledge'}
-      >
-        <form onSubmit={handleConfirmDonation} className="space-y-5">
-          {activeDonationCause && (
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center gap-3">
-              <span className="text-3xl">{activeDonationCause.icon}</span>
-              <div>
-                <h4 className="text-sm font-bold text-white">{activeDonationCause.title}</h4>
-                <p className="text-xs text-slate-400">{activeDonationCause.verifiedPartner}</p>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Select Points Contribution
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {[500, 1000, 2500].map((amt) => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => setDonatePointsAmt(amt)}
-                  className={`py-2.5 rounded-xl border text-xs font-bold transition-all ${
-                    donatePointsAmt === amt
-                      ? 'bg-pink-600/30 border-pink-500 text-pink-200'
-                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
-                  }`}
-                >
-                  {amt.toLocaleString()} pts (₹{((amt / 1000) * 11).toFixed(2)})
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-pink-950/20 border border-pink-800/30 text-xs text-pink-300 space-y-1">
-            <div className="flex justify-between font-semibold">
-              <span>Your Points Balance:</span>
-              <span>{user.totalPoints.toLocaleString()} pts</span>
-            </div>
-            <div className="flex justify-between text-slate-400 text-[11px]">
-              <span>Tax Exemption:</span>
-              <span>Section 80G Certified Digital Receipt</span>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
-          >
-            <Heart className="w-4 h-4" />
-            Confirm Sponsorship
-          </button>
-        </form>
-      </Modal>
+        cause={activeDonationCause}
+        user={user}
+        initialMode={donationInitialMode}
+        onConfirmPointsDonation={handleConfirmPointsDonation}
+        onConfirmMonetaryPledge={handleConfirmMonetaryPledge}
+        onNavigateHistory={() => setCurrentPage('donation-history')}
+      />
 
       {/* MODAL 4: Redeem Reward */}
       <Modal

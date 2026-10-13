@@ -7,6 +7,7 @@ export type PageId =
   | 'activity'
   | 'feed'
   | 'places'
+  | 'explore'
   | 'leaderboards'
   | 'challenges'
   | 'user-profile'
@@ -301,6 +302,30 @@ export interface WalkingPlace {
   tips: string;
   popularTime: string;
   isCheckedIn?: boolean;
+  isUserAdded?: boolean;
+  dateVisited?: string;
+  authorName?: string;
+  coordinates?: { lat: number; lng: number };
+  waypoints?: { name: string; distanceKm: number }[];
+}
+
+export interface UserVisitedPlaceInput {
+  title: string;
+  category: 'Urban Park' | 'Waterfront Promenade' | 'Nature Trail' | 'Historic Walk' | 'Neighborhood Loop';
+  city: string;
+  location: string;
+  distanceKm: number;
+  difficulty: PlaceDifficulty;
+  suitability: PlaceSuitability[];
+  description: string;
+  tips?: string;
+  dateVisited?: string;
+  imageUrl?: string;
+  hasShade?: boolean;
+  hasBenches?: boolean;
+  hasWaterFountains?: boolean;
+  isWheelchairAccessible?: boolean;
+  coordinates?: { lat: number; lng: number };
 }
 
 // ==========================================

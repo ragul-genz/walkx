@@ -32,7 +32,14 @@ export const initialPlaces: WalkingPlace[] = [
     description: 'A serene green lung in the heart of Bengaluru with 300+ tree species, pedestrian-only morning hours, and wide cushioned asphalt paths ideal for walkers of all generations.',
     tips: 'Vehicle-free zone every morning from 5:00 AM to 8:00 AM. Excellent gentle paving for seniors.',
     popularTime: '6:30 AM - 8:30 AM',
-    isCheckedIn: false
+    isCheckedIn: false,
+    coordinates: { lat: 12.9763, lng: 77.5929 },
+    waypoints: [
+      { name: 'Hudson Circle Entrance', distanceKm: 0.0 },
+      { name: 'Bamboo Grove Pathway', distanceKm: 1.2 },
+      { name: 'Seshadri Iyer Memorial Library', distanceKm: 2.4 },
+      { name: 'Bandstand Lotus Pond Finish', distanceKm: 3.8 }
+    ]
   },
   {
     id: 'plc_marina',
@@ -61,7 +68,14 @@ export const initialPlaces: WalkingPlace[] = [
     description: 'The world’s second-longest natural urban beach offering endless oceanic horizon views, refreshing salt-air breezes, and an expansive tiled boardwalk.',
     tips: 'Best visited before 7:30 AM for a cool morning stride with vibrant sunrise reflections.',
     popularTime: '5:45 AM - 7:15 AM',
-    isCheckedIn: true
+    isCheckedIn: true,
+    coordinates: { lat: 13.0499, lng: 80.2824 },
+    waypoints: [
+      { name: 'Triumph of Labour Memorial', distanceKm: 0.0 },
+      { name: 'Kannagi Statue Promenade', distanceKm: 1.8 },
+      { name: 'Marina Lighthouse Vista', distanceKm: 3.6 },
+      { name: 'Santhome South Turnaround', distanceKm: 5.2 }
+    ]
   },
   {
     id: 'plc_lodhi',
@@ -89,7 +103,14 @@ export const initialPlaces: WalkingPlace[] = [
     description: 'Immaculately landscaped 90-acre park featuring 15th-century Sayyid and Lodi dynasty architectural monuments, quiet flowering ponds, and paved perimeter loops.',
     tips: 'Abundant shaded teak benches make it a prime spot for seniors and multigenerational family morning walks.',
     popularTime: '6:00 AM - 8:00 AM',
-    isCheckedIn: false
+    isCheckedIn: false,
+    coordinates: { lat: 28.5933, lng: 77.2197 },
+    waypoints: [
+      { name: 'Gate 1 Lodhi Estate Entrance', distanceKm: 0.0 },
+      { name: 'Mohammed Shah Tomb Loop', distanceKm: 0.9 },
+      { name: 'Bara Gumbad & Mosque Vista', distanceKm: 1.8 },
+      { name: 'Athpula Stone Bridge Loop', distanceKm: 2.9 }
+    ]
   },
   {
     id: 'plc_sanjay',
@@ -117,7 +138,14 @@ export const initialPlaces: WalkingPlace[] = [
     description: 'Escape the metropolitan bustle into dense tropical rainforest canopies, bird-watching sanctuaries, and gentle babbling river crossings.',
     tips: 'Wear sturdy walking footwear with good traction. Entry permits are available at the main gate.',
     popularTime: '6:30 AM - 9:00 AM',
-    isCheckedIn: false
+    isCheckedIn: false,
+    coordinates: { lat: 19.2298, lng: 72.9106 },
+    waypoints: [
+      { name: 'Nature Interpretation Gate', distanceKm: 0.0 },
+      { name: 'Bamboo Stream Crossing', distanceKm: 2.1 },
+      { name: 'Shilonda Canopy Ridge', distanceKm: 4.3 },
+      { name: 'Forest Patrol Post Return', distanceKm: 6.4 }
+    ]
   },
   {
     id: 'plc_necklace',
@@ -145,7 +173,154 @@ export const initialPlaces: WalkingPlace[] = [
     description: 'A vibrant shoreline walkway framing the iconic Hussain Sagar lake, decorated with sculptures, solar-lit walking pathways, and evening lake fountains.',
     tips: 'Great for evening strolls with pleasant lake winds and well-lit safety poles throughout.',
     popularTime: '5:30 PM - 7:30 PM',
-    isCheckedIn: false
+    isCheckedIn: false,
+    coordinates: { lat: 17.4243, lng: 78.4727 },
+    waypoints: [
+      { name: 'Sanjeevaiah Park Entry', distanceKm: 0.0 },
+      { name: 'Jalavihar Lake Promenade', distanceKm: 1.5 },
+      { name: 'Buddha Statue Overlook', distanceKm: 3.1 },
+      { name: 'People’s Plaza Terminus', distanceKm: 4.6 }
+    ]
+  },
+  {
+    id: 'plc_sukhna',
+    title: 'Sukhna Lake Morning Promenade',
+    category: 'Waterfront Promenade',
+    location: 'Sector 1, Shivalik Foothills',
+    city: 'Chandigarh',
+    distanceKm: 3.2,
+    estimatedSteps: 4300,
+    durationMinutes: 42,
+    difficulty: 'Gentle & Flat',
+    suitability: ['All Ages', 'Senior Friendly', 'Stroller & Family', 'Pet Friendly'],
+    rating: 4.9,
+    reviewsCount: 380,
+    checkInsCount: 2200,
+    hasShade: true,
+    hasBenches: true,
+    hasRestrooms: true,
+    hasWaterFountains: true,
+    isWheelchairAccessible: true,
+    imageUrl: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1000&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1000&q=80'
+    ],
+    description: 'Iconic 3km walking promenade flanking the pristine reservoir with panoramic views of the blue Shivalik mountain range and crisp morning breezes.',
+    tips: 'Dedicated walking and jogging track with distance markers every 100 meters.',
+    popularTime: '6:00 AM - 8:00 AM',
+    isCheckedIn: false,
+    coordinates: { lat: 30.7421, lng: 76.8188 },
+    waypoints: [
+      { name: 'Clubhouse Promenade Start', distanceKm: 0.0 },
+      { name: 'Peepal Tree Rest Stop', distanceKm: 1.1 },
+      { name: 'Bird Sanctuary Boardwalk', distanceKm: 2.2 },
+      { name: 'Regatta Tower Finish', distanceKm: 3.2 }
+    ]
+  },
+  {
+    id: 'plc_marine_drive',
+    title: 'Marine Drive Queen’s Necklace Promenade',
+    category: 'Waterfront Promenade',
+    location: 'Netaji Subhash Chandra Bose Road',
+    city: 'Mumbai',
+    distanceKm: 4.3,
+    estimatedSteps: 5800,
+    durationMinutes: 52,
+    difficulty: 'Gentle & Flat',
+    suitability: ['All Ages', 'Senior Friendly', 'Stroller & Family', 'Brisk Walkers'],
+    rating: 4.9,
+    reviewsCount: 650,
+    checkInsCount: 4200,
+    hasShade: false,
+    hasBenches: true,
+    hasRestrooms: true,
+    hasWaterFountains: false,
+    isWheelchairAccessible: true,
+    imageUrl: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=1000&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=1000&q=80'
+    ],
+    description: 'World-famous 4.3km C-shaped boulevard along the Arabian Sea coast, celebrated for golden sunsets, refreshing salt breeze, and wide pedestrian pavements.',
+    tips: 'Wide sea-facing tetrapod wall offers plenty of rest spots. Evening breeze starts around 5:30 PM.',
+    popularTime: '5:45 PM - 8:00 PM',
+    isCheckedIn: false,
+    coordinates: { lat: 18.9438, lng: 72.8232 },
+    waypoints: [
+      { name: 'Nariman Point Terminus', distanceKm: 0.0 },
+      { name: 'Churchgate Junction Vista', distanceKm: 1.6 },
+      { name: 'Taraporewala Aquarium Walkway', distanceKm: 2.9 },
+      { name: 'Girgaon Chowpatty Finish', distanceKm: 4.3 }
+    ]
+  },
+  {
+    id: 'plc_lalbagh',
+    title: 'Lalbagh Glass House Perimeter Loop',
+    category: 'Urban Park',
+    location: 'Mavalli, South Bengaluru',
+    city: 'Bengaluru',
+    distanceKm: 4.1,
+    estimatedSteps: 5500,
+    durationMinutes: 50,
+    difficulty: 'Gentle & Flat',
+    suitability: ['All Ages', 'Senior Friendly', 'Stroller & Family'],
+    rating: 4.9,
+    reviewsCount: 480,
+    checkInsCount: 3100,
+    hasShade: true,
+    hasBenches: true,
+    hasRestrooms: true,
+    hasWaterFountains: true,
+    isWheelchairAccessible: true,
+    imageUrl: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1000&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1000&q=80'
+    ],
+    description: 'Centuries-old 240-acre botanical marvel housing centuries-old trees, serene lotus lake, Kempegowda watchtower, and the landmark Glass House.',
+    tips: 'Entry is free for morning walkers between 6:00 AM and 9:00 AM. Wide gravel loops.',
+    popularTime: '6:15 AM - 8:15 AM',
+    isCheckedIn: false,
+    coordinates: { lat: 12.9507, lng: 77.5848 },
+    waypoints: [
+      { name: 'West Gate Entrance', distanceKm: 0.0 },
+      { name: 'Historic Glass House Plaza', distanceKm: 1.3 },
+      { name: 'Lalbagh Lake Perimeter Walk', distanceKm: 2.7 },
+      { name: 'Kempegowda Rock Tower Loop', distanceKm: 4.1 }
+    ]
+  },
+  {
+    id: 'plc_rabindra',
+    title: 'Rabindra Sarobar Lake Loop',
+    category: 'Urban Park',
+    location: 'Southern Avenue, Dhakuria',
+    city: 'Kolkata',
+    distanceKm: 3.5,
+    estimatedSteps: 4700,
+    durationMinutes: 44,
+    difficulty: 'Gentle & Flat',
+    suitability: ['All Ages', 'Senior Friendly', 'Stroller & Family', 'Pet Friendly'],
+    rating: 4.8,
+    reviewsCount: 315,
+    checkInsCount: 1950,
+    hasShade: true,
+    hasBenches: true,
+    hasRestrooms: true,
+    hasWaterFountains: true,
+    isWheelchairAccessible: true,
+    imageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1000&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1000&q=80'
+    ],
+    description: 'Heritage artificial lake surrounded by centuries-old mahogany trees, migratory waterbirds, and gentle waterfront pathways.',
+    tips: 'Car-free and serene morning environment cherished by Kolkata walking clubs.',
+    popularTime: '5:45 AM - 7:45 AM',
+    isCheckedIn: false,
+    coordinates: { lat: 22.5126, lng: 88.3582 },
+    waypoints: [
+      { name: 'Southern Avenue Gate 1', distanceKm: 0.0 },
+      { name: 'Rowing Club Boardwalk', distanceKm: 1.2 },
+      { name: 'Japanese Buddhist Temple Vista', distanceKm: 2.3 },
+      { name: 'Lily Pool Bridge Loop', distanceKm: 3.5 }
+    ]
   },
   {
     id: 'plc_dehradun',
@@ -173,7 +348,14 @@ export const initialPlaces: WalkingPlace[] = [
     description: 'Crisp mountain air filtered through Himalayan pine needles, steady elevation gradients to boost cardiovascular stamina, and scenic valley views.',
     tips: 'Bring a refillable hydration bottle. The elevation climb offers outstanding calorie burn.',
     popularTime: '6:00 AM - 8:30 AM',
-    isCheckedIn: false
+    isCheckedIn: false,
+    coordinates: { lat: 30.3758, lng: 78.0772 },
+    waypoints: [
+      { name: 'Old Rajpur Trailhead', distanceKm: 0.0 },
+      { name: 'Pine Needle Scent Ridge', distanceKm: 2.2 },
+      { name: 'Himalayan Valley Viewpoint', distanceKm: 4.1 },
+      { name: 'Toll Barrier Spring Finish', distanceKm: 5.8 }
+    ]
   }
 ];
 

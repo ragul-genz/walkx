@@ -13,17 +13,24 @@ import {
   Droplets,
   X,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  PlusCircle,
+  BookmarkCheck,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
-import { WalkingPlace, PlaceDifficulty, PlaceSuitability, PageId } from '../types';
+import { WalkingPlace, PlaceDifficulty, PlaceSuitability, PageId, UserVisitedPlaceInput } from '../types';
 import { communityService } from '../services/communityService';
+import { CityLocationBar } from '../components/places/CityLocationBar';
+import { AddVisitedPlaceModal } from '../components/places/AddVisitedPlaceModal';
+import { TrailMapView } from '../components/places/TrailMapView';
 
 interface PlacesDiscoveryPageProps {
   onNavigate: (page: PageId) => void;
   showToast: (msg: string) => void;
 }
 
-const CATEGORIES = ['All', 'Urban Park', 'Waterfront Promenade', 'Nature Trail', 'Historic Walk'];
+const CATEGORIES = ['All', 'Urban Park', 'Waterfront Promenade', 'Nature Trail', 'Historic Walk', 'Neighborhood Loop'];
 const SUITABILITY_FILTERS: (PlaceSuitability | 'All')[] = [
   'All',
   'All Ages',
@@ -37,18 +44,28 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
   onNavigate,
   showToast
 }) => {
+  const [activePlacesTab, setActivePlacesTab] = useState<'all' | 'visited'>('all');
+  const [selectedCity, setSelectedCity] = useState<string>('All');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedSuitability, setSelectedSuitability] = useState<string>('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState<PlaceDifficulty | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [inspectingPlace, setInspectingPlace] = useState<WalkingPlace | null>(null);
+  const [isAddVisitedModalOpen, setIsAddVisitedModalOpen] = useState(false);
+
+  // Available cities from directory
+  const availableCities = communityService.getCities();
 
   const places = communityService.getPlaces({
     category: selectedCategory,
-    suitability: selectedSuitability,
+    city: selectedCity,
     difficulty: selectedDifficulty,
-    search: searchQuery
+    search: searchQuery,
+    suitability: selectedSuitability,
+    visitedOnly: activePlacesTab === 'visited'
   });
+
+  const visitedCount = communityService.getVisitedPlaces().length;
 
   const handleToggleCheckIn = (place: WalkingPlace) => {
     const checked = communityService.toggleCheckIn(place.id);
@@ -62,9 +79,15 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
       setInspectingPlace({
         ...inspectingPlace,
         isCheckedIn: checked,
-        checkInsCount: checked ? inspectingPlace.checkInsCount + 1 : inspectingPlace.checkInsCount - 1
+        checkInsCount: checked ? inspectingPlace.checkInsCount + 1 : Math.max(0, inspectingPlace.checkInsCount - 1)
       });
     }
+  };
+
+  const handleSaveVisitedPlace = (input: UserVisitedPlaceInput) => {
+    const newPlace = communityService.addVisitedPlace(input);
+    showToast(`Added ${newPlace.title} to your Visited Places log! 🎉`);
+    setActivePlacesTab('visited');
   };
 
   return (
@@ -73,22 +96,80 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
         {/* Hero Header */}
         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-indigo-950 via-[#0c102a] to-purple-950 border border-white/10 p-6 sm:p-10 shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#4B4DFF]/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#4B4DFF]/20 border border-[#4B4DFF]/30 text-indigo-300 text-xs font-semibold mb-3">
-              <Compass size={14} className="text-[#4B4DFF] animate-spin-slow" />
-              <span>Places & Trail Discovery</span>
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#4B4DFF]/20 border border-[#4B4DFF]/30 text-indigo-300 text-xs font-semibold mb-3">
+                <Compass size={14} className="text-[#4B4DFF] animate-spin-slow" />
+                <span>Places & Trail Discovery</span>
+              </div>
+              <h1 className="text-2xl sm:text-4xl font-extrabold text-white font-['Outfit'] tracking-tight">
+                Discover Scenic Walking Routes For All Ages
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+                Explore urban green loops, refreshing coastal promenades, shaded parks with senior-friendly benches, and scenic weekend hikes verified by local community striders.
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-white font-['Outfit'] tracking-tight">
-              Discover Scenic Walking Routes For All Ages
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
-              Explore urban green loops, refreshing coastal promenades, shaded parks with senior-friendly benches, and scenic weekend hikes verified by local community striders.
-            </p>
+
+            {/* Quick Action: Add Visited Place */}
+            <div className="flex flex-col sm:flex-row items-stretch md:items-end gap-3 shrink-0">
+              <button
+                onClick={() => setIsAddVisitedModalOpen(true)}
+                className="gradient-btn px-5 py-3 rounded-2xl text-xs font-extrabold text-white flex items-center justify-center gap-2 shadow-xl shadow-purple-600/30 active:scale-95 transition-all cursor-pointer"
+              >
+                <PlusCircle size={16} />
+                <span>Add Place I Visited</span>
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* City Location Bar with Graceful GPS Fallback */}
+        <CityLocationBar
+          selectedCity={selectedCity}
+          onSelectCity={setSelectedCity}
+          availableCities={availableCities}
+        />
+
         {/* Filter & Search Bar Cluster */}
         <div className="bg-[#0b0e24] border border-white/10 rounded-2xl p-4 space-y-4">
+          {/* Main Tab Toggle: All Places vs Places I Visited */}
+          <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-white/05">
+            <div className="flex items-center gap-2 bg-[#070914] p-1 rounded-xl border border-white/10 text-xs">
+              <button
+                type="button"
+                onClick={() => setActivePlacesTab('all')}
+                className={`px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  activePlacesTab === 'all'
+                    ? 'bg-[#4B4DFF] text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Compass size={14} />
+                <span>All Walking Trails</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActivePlacesTab('visited')}
+                className={`px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  activePlacesTab === 'visited'
+                    ? 'bg-emerald-500 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <BookmarkCheck size={14} />
+                <span>Places I've Visited ({visitedCount})</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setIsAddVisitedModalOpen(true)}
+              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-colors"
+            >
+              <PlusCircle size={13} />
+              <span>Record another place you've walked</span>
+            </button>
+          </div>
+
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             {/* Search Input */}
             <div className="relative flex-1">
@@ -129,7 +210,7 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                     active
                       ? 'bg-[#4B4DFF] text-white shadow-[0_0_12px_rgba(75,77,255,0.35)]'
                       : 'bg-white/[0.04] text-slate-400 hover:text-white hover:bg-white/[0.08] border border-white/05'
@@ -150,7 +231,7 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
                 <button
                   key={s}
                   onClick={() => setSelectedSuitability(s)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${
+                  className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all cursor-pointer ${
                     active
                       ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold'
                       : 'bg-white/[0.03] text-slate-400 hover:text-slate-200 border border-white/05'
@@ -166,23 +247,38 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
         {/* Places Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {places.length === 0 ? (
-            <div className="col-span-full py-16 text-center bg-[#0b0e24] border border-white/10 rounded-3xl">
+            <div className="col-span-full py-16 text-center bg-[#0b0e24] border border-white/10 rounded-3xl p-6">
               <Compass size={40} className="mx-auto text-indigo-400 mb-3 opacity-60" />
-              <h3 className="text-lg font-bold text-white mb-1">No matching walking places found</h3>
+              <h3 className="text-lg font-bold text-white mb-1">
+                {activePlacesTab === 'visited' ? 'No visited places recorded yet' : 'No matching walking places found'}
+              </h3>
               <p className="text-xs text-slate-400 max-w-sm mx-auto mb-4">
-                Try loosening your filters or searching for another city, trail, or neighborhood park.
+                {activePlacesTab === 'visited'
+                  ? 'Record trails you have walked to build your personal stride passport.'
+                  : 'Try loosening your filters or selecting "All Cities" to see more trails.'}
               </p>
-              <button
-                onClick={() => {
-                  setSelectedCategory('All');
-                  setSelectedSuitability('All');
-                  setSelectedDifficulty('All');
-                  setSearchQuery('');
-                }}
-                className="gradient-btn px-4 py-2 rounded-xl text-xs font-bold text-white"
-              >
-                Reset All Filters
-              </button>
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  onClick={() => setIsAddVisitedModalOpen(true)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5"
+                >
+                  <PlusCircle size={14} />
+                  <span>Add Place I Visited</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedCategory('All');
+                    setSelectedSuitability('All');
+                    setSelectedDifficulty('All');
+                    setSelectedCity('All');
+                    setSearchQuery('');
+                    setActivePlacesTab('all');
+                  }}
+                  className="gradient-btn px-4 py-2 rounded-xl text-xs font-bold text-white"
+                >
+                  Reset All Filters
+                </button>
+              </div>
             </div>
           ) : (
             places.map((place) => (
@@ -191,7 +287,10 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
                 className="group bg-[#0b0e24] border border-white/10 rounded-3xl overflow-hidden hover:border-[#4B4DFF]/50 transition-all duration-300 hover:shadow-[0_0_25px_rgba(75,77,255,0.15)] flex flex-col"
               >
                 {/* Image Cover */}
-                <div className="relative h-48 sm:h-52 overflow-hidden bg-slate-900 cursor-pointer" onClick={() => setInspectingPlace(place)}>
+                <div
+                  className="relative h-48 sm:h-52 overflow-hidden bg-slate-900 cursor-pointer"
+                  onClick={() => setInspectingPlace(place)}
+                >
                   <img
                     src={place.imageUrl}
                     alt={place.title}
@@ -200,7 +299,7 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0b0e24] via-transparent to-black/40" />
 
                   {/* Badges on Image */}
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                  <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-black/60 backdrop-blur-md text-white border border-white/20">
                       {place.category}
                     </span>
@@ -215,6 +314,11 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
                     >
                       {place.difficulty}
                     </span>
+                    {place.isUserAdded && (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/30 text-emerald-200 border border-emerald-500/40">
+                        Added By You
+                      </span>
+                    )}
                   </div>
 
                   <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-amber-400 text-xs font-bold border border-white/10">
@@ -274,7 +378,7 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
                   <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
                     <button
                       onClick={() => handleToggleCheckIn(place)}
-                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                         place.isCheckedIn
                           ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                           : 'bg-white/[0.06] text-slate-200 hover:bg-[#4B4DFF]/20 hover:text-white border border-white/10'
@@ -287,8 +391,8 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
 
                     <button
                       onClick={() => setInspectingPlace(place)}
-                      className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white transition-all"
-                      title="Inspect trail details"
+                      className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white transition-all cursor-pointer"
+                      title="Inspect trail details & map"
                     >
                       <ArrowRight size={15} />
                     </button>
@@ -300,12 +404,12 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
         </div>
       </div>
 
-      {/* Place Detail Inspector Modal */}
+      {/* Place Detail Inspector Modal with Reliable Map View */}
       {inspectingPlace && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-2xl bg-[#0b0e24] border border-white/10 rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
+          <div className="relative w-full max-w-2xl bg-[#0b0e24] border border-white/10 rounded-3xl overflow-hidden shadow-2xl max-h-[92vh] flex flex-col">
             {/* Modal Header Cover */}
-            <div className="relative h-60 sm:h-72 w-full bg-slate-900 shrink-0">
+            <div className="relative h-56 sm:h-64 w-full bg-slate-900 shrink-0">
               <img
                 src={inspectingPlace.imageUrl}
                 alt={inspectingPlace.title}
@@ -314,7 +418,7 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
               <div className="absolute inset-0 bg-gradient-to-t from-[#0b0e24] via-black/30 to-black/60" />
               <button
                 onClick={() => setInspectingPlace(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 text-slate-300 hover:text-white backdrop-blur-md"
+                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 text-slate-300 hover:text-white backdrop-blur-md cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -353,6 +457,9 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
                   <span className="text-[10px] text-slate-400">({inspectingPlace.reviewsCount} reviews)</span>
                 </div>
               </div>
+
+              {/* Reliable Trail Map & Waypoint Profile Component */}
+              <TrailMapView place={inspectingPlace} />
 
               {/* Description & Tips */}
               <div>
@@ -404,7 +511,7 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
             <div className="p-4 bg-slate-900/60 border-t border-white/10 flex items-center justify-between gap-3 shrink-0">
               <button
                 onClick={() => handleToggleCheckIn(inspectingPlace)}
-                className={`flex-1 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                   inspectingPlace.isCheckedIn
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                     : 'bg-white/[0.08] text-white hover:bg-white/[0.15] border border-white/10'
@@ -420,7 +527,7 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
                   onNavigate('feed');
                   showToast(`Post a stride from ${inspectingPlace.title}!`);
                 }}
-                className="flex-1 py-2.5 rounded-2xl text-xs font-bold gradient-btn text-white flex items-center justify-center gap-1.5 shadow-md"
+                className="flex-1 py-2.5 rounded-2xl text-xs font-bold gradient-btn text-white flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
               >
                 <Footprints size={14} />
                 <span>Share Stride From Here</span>
@@ -429,6 +536,14 @@ export const PlacesDiscoveryPage: React.FC<PlacesDiscoveryPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* Add Visited Place Modal */}
+      <AddVisitedPlaceModal
+        isOpen={isAddVisitedModalOpen}
+        onClose={() => setIsAddVisitedModalOpen(false)}
+        onSubmit={handleSaveVisitedPlace}
+        defaultCity={selectedCity}
+      />
     </div>
   );
 };

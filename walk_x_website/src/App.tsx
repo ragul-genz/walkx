@@ -45,6 +45,7 @@ import { ProfileSettingsPage } from './pages/ProfileSettingsPage';
 import { SocialFeedPage } from './pages/SocialFeedPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { PlacesDiscoveryPage } from './pages/PlacesDiscoveryPage';
+import { ExplorePage } from './pages/ExplorePage';
 import { LeaderboardsPage } from './pages/LeaderboardsPage';
 import { CommunityChallengesPage } from './pages/CommunityChallengesPage';
 
@@ -74,6 +75,7 @@ const validPages: PageId[] = [
   'activity',
   'feed',
   'places',
+  'explore',
   'leaderboards',
   'challenges',
   'user-profile',
@@ -714,6 +716,16 @@ export const App: React.FC = () => {
               return (
                 <PlacesDiscoveryPage
                   onNavigate={setCurrentPage}
+                  showToast={showToast}
+                />
+              );
+
+            case 'explore':
+              return (
+                <ExplorePage
+                  user={user}
+                  onNavigate={setCurrentPage}
+                  onViewProfile={handleViewUserProfile}
                   showToast={showToast}
                 />
               );

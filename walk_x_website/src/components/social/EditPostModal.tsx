@@ -6,7 +6,8 @@ import {
   Globe,
   Users,
   Lock,
-  Save
+  Save,
+  Shield
 } from 'lucide-react';
 import { SocialPost, ActivityType, PostVisibility } from '../../types';
 
@@ -151,6 +152,10 @@ export const EditPostModal: React.FC<EditPostModalProps> = ({
                 className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#4B4DFF]"
               />
             </div>
+            <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+              <Shield size={11} className="text-[#4B4DFF]" />
+              <span>Precise location private by default: only the venue name and city are displayed.</span>
+            </p>
           </div>
 
           {/* Audience Visibility */}

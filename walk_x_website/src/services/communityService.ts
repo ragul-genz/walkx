@@ -5,7 +5,8 @@ import {
   AgeBracket,
   LeaderboardTimeframe,
   LeaderboardCategory,
-  PlaceDifficulty
+  PlaceDifficulty,
+  UserVisitedPlaceInput
 } from '../types';
 import { initialPlaces, initialLeaderboard, initialChallenges } from '../data/communityData';
 
@@ -67,8 +68,13 @@ class CommunityService {
     difficulty?: PlaceDifficulty | 'All';
     search?: string;
     suitability?: string;
+    visitedOnly?: boolean;
   }): WalkingPlace[] {
     let result = [...this.places];
+
+    if (params?.visitedOnly) {
+      result = result.filter((p) => p.isCheckedIn);
+    }
 
     if (params?.search && params.search.trim()) {
       const query = params.search.toLowerCase().trim();
@@ -105,6 +111,71 @@ class CommunityService {
     return this.places.find((p) => p.id === id);
   }
 
+  getVisitedPlaces(): WalkingPlace[] {
+    return this.places.filter((p) => p.isCheckedIn);
+  }
+
+  getCities(): string[] {
+    const citySet = new Set<string>();
+    this.places.forEach((p) => {
+      if (p.city) citySet.add(p.city);
+    });
+    return Array.from(citySet).sort();
+  }
+
+  /**
+   * Add a place the user has visited
+   */
+  addVisitedPlace(input: UserVisitedPlaceInput, authorName: string = 'You'): WalkingPlace {
+    const estimatedSteps = Math.round(input.distanceKm * 1350);
+    const durationMinutes = Math.round(input.distanceKm * 13);
+    const newPlace: WalkingPlace = {
+      id: `usr_plc_${Date.now()}`,
+      title: input.title.trim(),
+      category: input.category,
+      location: input.location.trim() || input.city,
+      city: input.city.trim(),
+      distanceKm: input.distanceKm,
+      estimatedSteps,
+      durationMinutes,
+      difficulty: input.difficulty,
+      suitability: input.suitability.length > 0 ? input.suitability : ['All Ages'],
+      rating: 5.0,
+      reviewsCount: 1,
+      checkInsCount: 1,
+      hasShade: input.hasShade ?? true,
+      hasBenches: input.hasBenches ?? true,
+      hasRestrooms: false,
+      hasWaterFountains: input.hasWaterFountains ?? false,
+      isWheelchairAccessible: input.isWheelchairAccessible ?? false,
+      imageUrl:
+        input.imageUrl ||
+        'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1000&q=80',
+      gallery: [
+        input.imageUrl ||
+        'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1000&q=80'
+      ],
+      description: input.description.trim() || `Scenic walking trail in ${input.city} added by ${authorName}.`,
+      tips: input.tips?.trim() || 'Recommended by a local community walker.',
+      popularTime: 'Morning Stride Hours',
+      isCheckedIn: true,
+      isUserAdded: true,
+      dateVisited: input.dateVisited || new Date().toISOString().split('T')[0],
+      authorName,
+      coordinates: input.coordinates,
+      waypoints: [
+        { name: `${input.title} Entrance`, distanceKm: 0.0 },
+        { name: 'Midway Vista Point', distanceKm: Number((input.distanceKm * 0.5).toFixed(1)) },
+        { name: 'Trail Loop Finish', distanceKm: input.distanceKm }
+      ]
+    };
+
+    // Prepend to places
+    this.places = [newPlace, ...this.places];
+    this.persist();
+    return newPlace;
+  }
+
   toggleCheckIn(placeId: string): boolean {
     const place = this.places.find((p) => p.id === placeId);
     if (!place) return false;
@@ -113,6 +184,47 @@ class CommunityService {
     place.checkInsCount = place.isCheckedIn ? place.checkInsCount + 1 : Math.max(0, place.checkInsCount - 1);
     this.persist();
     return place.isCheckedIn;
+  }
+
+  /**
+   * Unified search across places, challenges, and walkers
+   */
+  searchAll(query: string) {
+    const q = query.toLowerCase().trim();
+    if (!q) {
+      return {
+        places: this.places.slice(0, 4),
+        challenges: this.challenges.slice(0, 3),
+        walkers: this.leaderboard.slice(0, 3)
+      };
+    }
+
+    const matchedPlaces = this.places.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.city.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q)
+    );
+
+    const matchedChallenges = this.challenges.filter(
+      (c) =>
+        c.title.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q) ||
+        c.audience.toLowerCase().includes(q)
+    );
+
+    const matchedWalkers = this.leaderboard.filter(
+      (w) =>
+        w.name.toLowerCase().includes(q) ||
+        w.username.toLowerCase().includes(q) ||
+        w.city.toLowerCase().includes(q)
+    );
+
+    return {
+      places: matchedPlaces,
+      challenges: matchedChallenges,
+      walkers: matchedWalkers
+    };
   }
 
   // ==========================================

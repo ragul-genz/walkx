@@ -14,7 +14,8 @@ import {
   Users,
   Compass,
   Trophy,
-  Zap
+  Zap,
+  MapPin
 } from 'lucide-react';
 import { isSupabaseConfigured } from '../services/supabaseClient';
 
@@ -44,7 +45,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Overview', page: 'landing' },
     { label: 'Dashboard', page: 'dashboard', icon: Smartphone },
     { label: 'Feed', page: 'feed', icon: Users },
-    { label: 'Places', page: 'places', icon: Compass },
+    { label: 'Explore', page: 'explore', icon: Compass },
+    { label: 'Places', page: 'places', icon: MapPin },
     { label: 'Leaderboard', page: 'leaderboards', icon: Trophy },
     { label: 'Challenges', page: 'challenges', icon: Zap },
     { label: 'Activity', page: 'activity', icon: Activity },

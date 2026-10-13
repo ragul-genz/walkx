@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Image,
@@ -9,9 +9,12 @@ import {
   Lock,
   Sparkles,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Shield,
+  Search
 } from 'lucide-react';
-import { ActivityType, PostVisibility, UserProfile } from '../../types';
+import { ActivityType, PostVisibility, UserProfile, WalkingPlace } from '../../types';
+import { communityService } from '../../services/communityService';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -78,10 +81,16 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const [customPhotoUrl, setCustomPhotoUrl] = useState('');
   const [placeTag, setPlaceTag] = useState<{ name: string; city?: string } | null>(null);
   const [placeInput, setPlaceInput] = useState('');
+  const [placeCityInput, setPlaceCityInput] = useState(user.city?.split(',')[0] || 'Bengaluru');
+  const [placeFilterTab, setPlaceFilterTab] = useState<'visited' | 'all'>('visited');
   const [visibility, setVisibility] = useState<PostVisibility>('public');
   const [attachMetrics, setAttachMetrics] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Dynamic places from community service
+  const visitedPlaces = communityService.getVisitedPlaces();
+  const allCommunityPlaces = communityService.getPlaces();
 
   if (!isOpen) return null;
 
@@ -123,7 +132,12 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           }
         : undefined;
 
-      const finalPlace = placeTag || (placeInput.trim() ? { name: placeInput.trim() } : undefined);
+      // Sanitized place: privacy preserved, no exact GPS coordinates
+      const finalPlace = placeTag
+        ? { name: placeTag.name, city: placeTag.city }
+        : placeInput.trim()
+        ? { name: placeInput.trim(), city: placeCityInput.trim() || undefined }
+        : undefined;
 
       await onSubmit({
         caption: caption.trim(),
@@ -351,41 +365,92 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
             </div>
           </div>
 
-          {/* Place Tag Selection */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-              <MapPin size={14} className="text-rose-400" />
-              Place Tag (Optional)
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {POPULAR_PLACES.map((p) => {
-                const isSelected = placeTag?.name === p.name;
+          {/* Place Tag Selection & Privacy Protection */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <MapPin size={14} className="text-rose-400" />
+                Attach Walking Place / Trail
+              </label>
+
+              {/* Sub-tab: Places I Visited vs All Trails */}
+              <div className="flex items-center gap-1 bg-[#070914] p-0.5 rounded-lg border border-white/10 text-[10px]">
+                <button
+                  type="button"
+                  onClick={() => setPlaceFilterTab('visited')}
+                  className={`px-2 py-0.5 rounded font-bold transition-all ${
+                    placeFilterTab === 'visited'
+                      ? 'bg-emerald-500/20 text-emerald-300'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  My Visited Places ({visitedPlaces.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlaceFilterTab('all')}
+                  className={`px-2 py-0.5 rounded font-bold transition-all ${
+                    placeFilterTab === 'all'
+                      ? 'bg-[#4B4DFF]/20 text-indigo-300'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  All Trails
+                </button>
+              </div>
+            </div>
+
+            {/* Chips from dynamic places */}
+            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto scrollbar-none">
+              {(placeFilterTab === 'visited' ? visitedPlaces : allCommunityPlaces).slice(0, 8).map((p) => {
+                const isSelected = placeTag?.name === p.title;
                 return (
                   <button
-                    key={p.name}
+                    key={p.id}
                     type="button"
-                    onClick={() => setPlaceTag(isSelected ? null : p)}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold border transition-all ${
+                    onClick={() =>
+                      setPlaceTag(
+                        isSelected ? null : { name: p.title, city: p.city }
+                      )
+                    }
+                    className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold border transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
                         : 'bg-white/[0.03] text-slate-400 border-white/10 hover:text-slate-200'
                     }`}
                   >
-                    📍 {p.name}
+                    📍 {p.title} <span className="opacity-60 text-[9px]">({p.city})</span>
                   </button>
                 );
               })}
             </div>
-            <input
-              type="text"
-              value={placeInput}
-              onChange={(e) => {
-                setPlaceInput(e.target.value);
-                setPlaceTag(null);
-              }}
-              placeholder="Or type a custom location (e.g. Lalbagh West Gate)"
-              className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-[#4B4DFF]"
-            />
+
+            {/* Manual custom place input + city */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input
+                type="text"
+                value={placeInput}
+                onChange={(e) => {
+                  setPlaceInput(e.target.value);
+                  setPlaceTag(null);
+                }}
+                placeholder="Or type a custom trail or park..."
+                className="sm:col-span-2 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-[#4B4DFF]"
+              />
+              <input
+                type="text"
+                value={placeCityInput}
+                onChange={(e) => setPlaceCityInput(e.target.value)}
+                placeholder="City (e.g. Bengaluru)"
+                className="px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-[#4B4DFF]"
+              />
+            </div>
+
+            {/* Privacy indicator */}
+            <div className="p-2.5 rounded-xl bg-indigo-950/30 border border-indigo-500/20 text-[11px] text-slate-400 flex items-center gap-2">
+              <Shield size={13} className="text-[#4B4DFF] shrink-0" />
+              <span>Precise location private by default: only the venue name and city will be displayed.</span>
+            </div>
           </div>
         </form>
 
